@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@100;300;400;500;700;900&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@100;300;400;500;700;900&family=Roboto:wght@300;400;500;700;900&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
     
     <style>
         /* ============================================
@@ -41,6 +41,10 @@
             --text-glow-intensity: 0.5;
         }
 
+        /* Font Overrides */
+        body.font-roboto { --font-base: 'Roboto', sans-serif; }
+        body.font-cinzel { --font-base: 'Cinzel', serif; }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { font-size: 62.5%; scroll-behavior: smooth; }
         body {
@@ -50,7 +54,9 @@
             background-attachment: fixed;
             color: var(--neon-white);
             overflow-x: hidden;
-            transition: background 0.8s ease, color 0.8s ease;
+            transition: background 1.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                        color 0.8s ease, 
+                        font-family 0.5s ease-in-out;
         }
 
         .grid-container {
@@ -63,7 +69,18 @@
             min-height: 100vh;
         }
 
-        /* Widening textboxes - Mandatory spread */
+        /* MANDATORY BUTTON STYLES */
+        button, .m3-elevated-button {
+            background-color: #774422 !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            color: white !important;
+        }
+        button:hover, .m3-elevated-button:hover {
+            background-color: #227744 !important;
+            box-shadow: 0 0 15px rgba(34, 119, 68, 0.5) !important;
+        }
+
+        /* Widening textboxes */
         input[type="text"], input[type="date"], select, textarea {
             width: 100% !important;
             display: block !important;
@@ -73,51 +90,11 @@
             padding: 1.5rem !important;
             border-radius: 1rem !important;
             font-size: 1.6rem !important;
-            transition: all 0.3s ease !important;
-        }
-        input:focus, textarea:focus, select:focus {
-            outline: none !important;
-            border-color: var(--neon-magenta) !important;
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.3) !important;
-            background: rgba(255, 255, 255, 0.08) !important;
         }
 
-        /* Material Elevated & Glow effects */
-        .m3-elevated-button {
-            position: relative;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 1.5rem;
-            padding: 2rem;
-            transition: var(--glow-transition);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            overflow: hidden;
-        }
-        .m3-elevated-button:hover {
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-        }
-        .m3-elevated-button:active {
-            transform: translateY(0) scale(0.98);
-        }
-
-        /* Guna-specific Glows */
-        .glow-upgrade:hover { border-color: var(--neon-green); box-shadow: 0 0 20px var(--neon-green), 0 0 40px rgba(0, 255, 100, 0.2); }
-        .glow-downgrade:hover { border-color: var(--neon-red); box-shadow: 0 0 20px var(--neon-red), 0 0 40px rgba(255, 0, 100, 0.2); }
-        .glow-mixed:hover { border-color: var(--neon-blue); box-shadow: 0 0 20px var(--neon-blue), 0 0 40px rgba(0, 150, 255, 0.2); }
-
-        /* Typography */
         .font-cinzel { font-family: 'Cinzel', serif !important; }
-        .text-neon-red { color: var(--neon-red); text-shadow: 0 0 10px var(--neon-red); }
-        .text-neon-green { color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); }
-        .text-neon-blue { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
-        .text-neon-yellow { color: var(--neon-yellow); text-shadow: 0 0 10px var(--neon-yellow); }
-
-        @keyframes pulse {
-            0% { opacity: 0.8; }
-            100% { opacity: 1; filter: brightness(1.2); }
-        }
-
+        .font-roboto { font-family: 'Roboto', sans-serif !important; }
+        
         .animate-in { animation: fadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 

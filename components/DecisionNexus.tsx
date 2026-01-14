@@ -62,39 +62,39 @@ const DecisionNexus: React.FC<Props> = ({ state, onUndo, onDecision, canUndo }) 
               key={idx}
               onClick={() => onDecision(d.impact)}
               className={`
-                m3-elevated-button flex flex-col text-left p-8 
+                m3-elevated-button flex flex-col text-left p-10 
                 ${getGlowClass(d.type)} w-full bg-black/40 group
               `}
             >
-              <div className="flex justify-between items-center mb-6 w-full">
-                <span className="font-cinzel text-2xl font-black text-white group-hover:text-neon-white transition-colors">{d.label}</span>
+              <div className="flex justify-between items-center mb-8 w-full">
+                <span className="font-cinzel text-3xl font-black text-white group-hover:text-neon-white transition-colors">{d.label}</span>
                 <span 
                   style={{ color: semanticColor, borderColor: semanticColor }}
-                  className="text-[9px] px-4 py-1.5 rounded-full font-black uppercase tracking-[0.2em] bg-black/60 border opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all"
+                  className="text-[9px] px-5 py-2 rounded-full font-black uppercase tracking-[0.2em] bg-black/60 border opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all shadow-inner"
                 >
                   {d.type}
                 </span>
               </div>
-              <p className="text-lg text-slate-400 font-light leading-relaxed group-hover:text-slate-100 transition-colors">{d.desc}</p>
+              <p className="text-xl text-slate-400 font-light leading-relaxed group-hover:text-slate-100 transition-colors">{d.desc}</p>
             </button>
           );
         })}
       </div>
       
       {canUndo && (
-        <div className="flex justify-center w-full pt-6">
+        <div className="flex justify-center w-full pt-8">
           <button 
             onClick={onUndo} 
             className="
-              flex items-center gap-4 px-12 py-4 
+              flex items-center gap-5 px-14 py-5 
               bg-white/5 border border-white/10 rounded-full 
               text-[11px] font-black uppercase tracking-[0.5em] text-slate-400 
-              hover:text-neon-magenta hover:bg-white/10 hover:border-neon-magenta/50
-              hover:shadow-[0_0_20px_rgba(255,0,255,0.2)]
+              hover:text-neon-blue hover:bg-white/10 hover:border-neon-blue/50
+              hover:shadow-[0_0_30px_rgba(0,150,255,0.3)]
               transition-all active:scale-95 group
             "
           >
-            <span className="material-symbols-outlined text-xl group-hover:rotate-12 transition-transform">undo</span>
+            <span className="material-symbols-outlined text-2xl group-hover:rotate-12 transition-transform">undo</span>
             Revert Temporal State
           </button>
         </div>

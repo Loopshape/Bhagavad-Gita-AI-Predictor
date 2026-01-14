@@ -1,52 +1,129 @@
-import React, { useState, useEffect } from 'react';
-import { UserProfile, AlignmentState, GitaInsight, YearlyDedication } from './types';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { UserProfile, AlignmentState, GitaInsight, YearlyDedication, QuarterlyFocus } from './types';
 import MentalShapeMatrix from './components/MentalShapeMatrix';
 import DecisionNexus from './components/DecisionNexus';
 import SageChat from './components/SageChat';
 import VisualArsenal from './components/VisualArsenal';
 import LiveConversation from './components/LiveConversation';
-import { generateGitaInsight, generateYearlyDedication } from './services/geminiService';
+import { generateGitaInsight, generateYearlyDedication, getExpandedGitaDetails } from './services/geminiService';
 
 interface AppError {
   message: string;
-  category: 'API' | 'Spiritual' | 'System';
+  category: 'Spiritual' | 'Connection' | 'Computational' | 'Identity';
+  code: string;
+  steps: string[];
   action?: () => void;
 }
 
 const GlobalLoader: React.FC<{ loading: boolean }> = ({ loading }) => {
   if (!loading) return null;
   return (
-    <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center">
-      <div className="text-center animate-pulse">
-        <div className="w-24 h-24 border-4 border-neon-magenta border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-        <h2 className="text-neon-magenta text-4xl font-cinzel tracking-widest uppercase">Resonating Matrix</h2>
+    <div className="fixed inset-0 z-[500] bg-black/80 backdrop-blur-xl flex items-center justify-center transition-opacity duration-500">
+      <div className="text-center">
+        <div className="relative w-32 h-32 mx-auto mb-10">
+          <div className="absolute inset-0 border-4 border-neon-magenta border-t-transparent rounded-full animate-spin"></div>
+          <div className="absolute inset-4 border-4 border-neon-blue border-b-transparent rounded-full animate-spin-slow"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="material-symbols-outlined text-neon-yellow text-5xl animate-pulse">psychology</span>
+          </div>
+        </div>
+        <h2 className="text-neon-magenta text-4xl font-cinzel tracking-[0.3em] uppercase mb-2">Aligning</h2>
+        <p className="text-neon-blue text-xs font-black uppercase tracking-[0.6em] opacity-60">Consulting Cosmic Matrix Protocol...</p>
       </div>
+      <style>{`
+        .animate-spin-slow { animation: spin 3s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 };
 
-const ErrorDisplay: React.FC<{ error: AppError | null, onClose: () => void }> = ({ error, onClose }) => {
-  if (!error) return null;
+const DecisionHistoryChart: React.FC<{ history: AlignmentState[] }> = ({ history }) => {
+  if (history.length === 0) return null;
+  
+  const chartWidth = 100; // percent
+  const maxHistory = 10;
+  const recentHistory = history.slice(-maxHistory);
+  
   return (
-    <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[300] max-w-2xl w-full px-4 animate-in">
-      <div className="bg-[#2d0a0a] border-2 border-neon-red p-8 rounded-[2rem] shadow-[0_0_30px_rgba(255,0,0,0.3)] flex items-start gap-6">
-        <span className="material-symbols-outlined text-neon-red text-5xl">report_problem</span>
-        <div className="flex-1">
-          <h4 className="text-neon-red font-cinzel mb-2 uppercase tracking-widest">{error.category} FAULT</h4>
-          <p className="text-white text-lg font-light mb-6 opacity-80">{error.message}</p>
-          <div className="flex gap-4">
-            {error.action && (
-              <button 
-                onClick={() => { error.action?.(); onClose(); }} 
-                className="bg-neon-red text-black font-black px-6 py-2 rounded-xl text-xs uppercase hover:scale-105 active:scale-95 transition-all"
-              >
-                Retry Alignment
-              </button>
-            )}
-            <button onClick={onClose} className="border border-white/20 text-white/50 px-6 py-2 rounded-xl text-xs uppercase hover:bg-white/5 transition-all">Dismiss</button>
-          </div>
+    <div className="bg-black/40 p-6 rounded-[2rem] border border-white/5 shadow-xl mb-8 animate-in">
+      <div className="flex items-center justify-between mb-4">
+        <h5 className="text-[10px] uppercase font-black tracking-widest text-neon-magenta">Impact Sequence</h5>
+        <div className="flex gap-4">
+          <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-neon-green rounded-full"></div><span className="text-[8px] uppercase tracking-widest text-white/40">Emotion</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-neon-blue rounded-full"></div><span className="text-[8px] uppercase tracking-widest text-white/40">Energy</span></div>
         </div>
       </div>
+      <div className="flex items-end gap-2 h-24 w-full px-2 overflow-x-auto">
+        {recentHistory.map((s, i) => (
+          <div key={i} className="flex-1 flex flex-col justify-end gap-1 min-w-[12px]">
+            <div 
+              className="w-full bg-neon-green/40 rounded-t-sm transition-all duration-500" 
+              style={{ height: `${Math.abs(s.emotionLevel + 100) / 2}%` }}
+              title={`Emotion: ${s.emotionLevel.toFixed(1)}`}
+            ></div>
+            <div 
+              className="w-full bg-neon-blue/40 rounded-t-sm transition-all duration-500" 
+              style={{ height: `${s.energyVector}%` }}
+              title={`Energy: ${s.energyVector.toFixed(1)}`}
+            ></div>
+          </div>
+        ))}
+      </div>
+      <p className="text-[8px] uppercase tracking-widest text-white/20 mt-4 text-center">Timeline Analysis of Last {recentHistory.length} Shifts</p>
+    </div>
+  );
+};
+
+const QuarterlyCard: React.FC<{ focus: QuarterlyFocus }> = ({ focus }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [details, setDetails] = useState<string | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+
+  const toggleExpand = async () => {
+    if (!expanded && !details) {
+      setLoadingDetails(true);
+      try {
+        const d = await getExpandedGitaDetails(focus.gitaVerse, focus.balancingAction);
+        setDetails(d);
+      } catch (e) {
+        setDetails("Alignment details currently unavailable in the cosmic record.");
+      } finally {
+        setLoadingDetails(false);
+      }
+    }
+    setExpanded(!expanded);
+  };
+
+  return (
+    <div 
+      onClick={toggleExpand}
+      className={`bg-black/40 border border-white/10 rounded-[2.5rem] p-8 transition-all cursor-pointer hover:bg-black/60 group ${expanded ? 'col-span-2' : ''}`}
+    >
+      <div className="flex justify-between items-start mb-4">
+        <h6 className="text-neon-green font-black uppercase text-[10px] tracking-widest">{focus.quarter}</h6>
+        <span className="material-symbols-outlined text-neon-magenta text-xl group-hover:rotate-180 transition-transform">
+          {expanded ? 'keyboard_arrow_up' : 'expand_more'}
+        </span>
+      </div>
+      <h5 className="font-cinzel text-white text-xl mb-4 group-hover:text-accent">{focus.theme}</h5>
+      <p className="text-slate-400 text-sm italic mb-4 leading-relaxed">"{focus.gitaVerse}"</p>
+      <div className="flex items-center gap-3">
+        <span className="text-[8px] uppercase font-black tracking-widest text-neon-blue">Action:</span>
+        <span className="text-xs text-neon-blue font-bold">{focus.balancingAction}</span>
+      </div>
+      
+      {expanded && (
+        <div className="mt-8 pt-8 border-t border-white/5 animate-in">
+          {loadingDetails ? (
+            <div className="flex gap-2 p-2"><div className="w-1 h-1 bg-accent rounded-full animate-bounce"></div><div className="w-1 h-1 bg-accent rounded-full animate-bounce delay-150"></div></div>
+          ) : (
+            <p className="text-sm leading-relaxed text-slate-200 bg-white/5 p-6 rounded-2xl italic">
+              {details}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -60,27 +137,42 @@ const App: React.FC = () => {
   const [yearlyPlan, setYearlyPlan] = useState<YearlyDedication | null>(null);
   const [loading, setLoading] = useState(false);
   const [theme, setTheme] = useState<'gradient' | 'darker'>('gradient');
+  const [fontPref, setFontPref] = useState<'roboto' | 'cinzel'>('cinzel');
   const [error, setError] = useState<AppError | null>(null);
 
   useEffect(() => {
-    document.body.className = theme === 'gradient' ? 'gradient-bg' : 'darker-bg';
-  }, [theme]);
+    document.body.className = `${theme === 'gradient' ? 'gradient-bg' : 'darker-bg'} font-${fontPref}`;
+  }, [theme, fontPref]);
 
-  const handleStart = async () => {
-    if (!tempProfile.name || !tempProfile.birthDate) return;
+  const handleStart = useCallback(async () => {
+    if (!tempProfile.name || !tempProfile.birthDate) {
+      setError({
+        category: 'Identity',
+        code: 'IDENT-001',
+        message: 'Temporal root credentials incomplete.',
+        steps: ['Ensure both identity name and temporal point (date) are populated.', 'Verify the validity of the birth date structure.'],
+      });
+      return;
+    }
     setLoading(true);
     try {
       const plan = await generateYearlyDedication(tempProfile);
       setYearlyPlan(plan);
       setProfile(tempProfile);
     } catch (e: any) {
-      setError({ category: 'API', message: "Initialization failure. The neural bridge could not establish connection.", action: handleStart });
+      setError({ 
+        category: 'Computational', 
+        code: 'COMP-503', 
+        message: "Neural roadmap initialization failure. The matrix could not resolve your temporal signature.", 
+        steps: ['Verify your API network connectivity.', 'Check if your spiritual key is correctly selected.', 'Try again in a few moments.'],
+        action: handleStart 
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [tempProfile]);
 
-  const fetchInsight = async () => {
+  const fetchInsight = useCallback(async () => {
     if (!profile) return;
     setLoading(true);
     try {
@@ -91,11 +183,17 @@ const App: React.FC = () => {
       });
       setInsight(result);
     } catch (e) {
-      setError({ category: 'Spiritual', message: "Wisdom synthesis interrupted by systemic noise.", action: fetchInsight });
+      setError({ 
+        category: 'Spiritual', 
+        code: 'SPIR-808', 
+        message: "Wisdom synthesis resonance interrupted.", 
+        steps: ['Attempt to re-align your Mental Matrix node.', 'Check network.', 'Re-trigger seeking.'],
+        action: fetchInsight 
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [profile, state]);
 
   const handleDecision = (impact: Partial<AlignmentState>) => {
     setHistory(prev => [...prev, { ...state }]);
@@ -117,14 +215,12 @@ const App: React.FC = () => {
     return (
       <div className="grid-container flex items-center justify-center h-screen">
         <GlobalLoader loading={loading} />
-        <ErrorDisplay error={error} onClose={() => setError(null)} />
         <div className="content-narrow bg-black/40 backdrop-blur-3xl p-16 rounded-[4rem] border border-white/10 shadow-2xl animate-in text-center">
-          <h1 className="font-cinzel text-neon-red mb-8">Gita Matrix</h1>
-          <p className="mb-12 text-neon-white opacity-60 uppercase tracking-[0.5em] text-xs font-black">Spiritual Predictor v2.8.2</p>
+          <h1 className="font-cinzel text-neon-red mb-8 text-6xl">Gita Matrix</h1>
           <div className="space-y-8 text-left">
             <input type="text" placeholder="Identity Name" value={tempProfile.name} onChange={e => setTempProfile({ ...tempProfile, name: e.target.value })} />
             <input type="date" value={tempProfile.birthDate} onChange={e => setTempProfile({ ...tempProfile, birthDate: e.target.value })} />
-            <button onClick={handleStart} className="w-full bg-neon-magenta text-black font-black py-6 rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,0,255,0.4)] uppercase tracking-widest text-lg">Initiate Alignment</button>
+            <button onClick={handleStart} className="w-full py-6 rounded-2xl font-black uppercase tracking-widest text-lg">Initiate Alignment</button>
           </div>
         </div>
       </div>
@@ -134,68 +230,77 @@ const App: React.FC = () => {
   return (
     <div className="grid-container animate-in">
       <GlobalLoader loading={loading} />
-      <ErrorDisplay error={error} onClose={() => setError(null)} />
-
+      
       {/* HEADER */}
-      <header className="full-bleed flex justify-between items-center mb-12 py-8 border-b border-white/5">
+      <header className="col-span-24 flex flex-col md:flex-row justify-between items-center mb-12 py-10 border-b border-white/5 gap-8">
         <div>
-          <h2 className="text-neon-green font-cinzel uppercase tracking-tighter m-0 border-none p-0">{profile.name}'s Matrix</h2>
-          <p className="text-neon-magenta text-xs font-black uppercase tracking-[0.4em] mt-2 opacity-50">Resonance Layer: {state.focusDimension}</p>
+          <h2 className="text-neon-green font-cinzel uppercase tracking-tighter m-0 border-none p-0 leading-none text-4xl">{profile.name}'s Matrix</h2>
+          <p className="text-neon-magenta text-xs font-black uppercase tracking-[0.4em] mt-4 opacity-50">Resonance Layer: {state.focusDimension} :: Node v2.8.2</p>
         </div>
-        <button 
-          onClick={() => setTheme(t => t === 'gradient' ? 'darker' : 'gradient')} 
-          className="flex items-center gap-4 bg-white/5 border border-white/10 px-8 py-3 rounded-full hover:bg-white/10 transition-all group"
-        >
-          <span className="material-symbols-outlined text-neon-yellow group-hover:rotate-90 transition-transform">
-            {theme === 'gradient' ? 'dark_mode' : 'light_mode'}
-          </span>
-          <span className="text-xs uppercase font-black tracking-widest text-white/70">Theme Cycle</span>
-        </button>
+        
+        <div className="flex items-center gap-6">
+          <div className="flex bg-black/40 p-1.5 rounded-full border border-white/10 shadow-inner">
+            <button onClick={() => setFontPref('roboto')} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${fontPref === 'roboto' ? 'bg-neon-blue' : 'bg-transparent'}`}>Roboto</button>
+            <button onClick={() => setFontPref('cinzel')} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${fontPref === 'cinzel' ? 'bg-neon-blue' : 'bg-transparent'}`}>Cinzel</button>
+          </div>
+          <button onClick={() => setTheme(t => t === 'gradient' ? 'darker' : 'gradient')} className="px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10">Cycle Theme</button>
+        </div>
       </header>
 
-      {/* LEFT COLUMN: Controls & Visualization */}
+      {/* LEFT COLUMN */}
       <aside className="col-span-24 lg:col-span-10 space-y-12">
         <MentalShapeMatrix state={state} onChange={setState} />
         <LiveConversation />
         <VisualArsenal />
       </aside>
 
-      {/* RIGHT COLUMN: Synthesis & Logic */}
+      {/* RIGHT COLUMN */}
       <main className="col-span-24 lg:col-span-14 space-y-12">
-        <section className="bg-black/20 p-12 rounded-[3rem] border border-white/5 shadow-2xl relative overflow-hidden">
-          <div className="flex justify-between items-center mb-12 border-b border-white/5 pb-8">
-            <h3 className="text-neon-blue m-0">Neural Wisdom</h3>
-            <button onClick={fetchInsight} disabled={loading} className="bg-neon-blue text-black px-12 py-3 rounded-full font-black uppercase tracking-widest hover:scale-110 active:scale-95 transition-all shadow-[0_0_15px_rgba(0,150,255,0.4)]">Seek Insight</button>
+        {/* Wisdom Synthesis */}
+        <section className="bg-black/20 p-14 rounded-[4rem] border border-white/5 shadow-2xl">
+          <div className="flex justify-between items-center mb-12 border-b border-white/5 pb-10">
+            <h3 className="text-neon-blue m-0 font-cinzel text-3xl">Neural Wisdom</h3>
+            <button onClick={fetchInsight} disabled={loading} className="px-12 py-4 rounded-2xl font-black uppercase tracking-widest">Seek Insight</button>
           </div>
           
-          {insight ? (
+          {insight && (
             <div className="animate-in space-y-12">
-              <div className="bg-gradient-to-br from-neon-blue/10 to-transparent p-12 rounded-[2.5rem] border border-neon-blue/20">
-                <p className="font-cinzel text-5xl text-center leading-tight text-white shadow-sm italic">"{insight.verse}"</p>
+              <div className="bg-gradient-to-br from-neon-blue/15 to-transparent p-12 rounded-[3rem] border border-neon-blue/20">
+                <p className="font-cinzel text-4xl text-center leading-[1.3] text-white italic">"{insight.verse}"</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="bg-black/40 p-10 rounded-[2rem] border border-white/5 hover:border-neon-blue/30 transition-colors group">
-                  <h6 className="text-neon-blue opacity-40 uppercase tracking-widest mb-4 group-hover:opacity-100 transition-opacity">Systemic Depth</h6>
-                  <p className="text-xl font-light leading-relaxed">{insight.philosophicalStatement}</p>
+                <div className="bg-black/40 p-10 rounded-[2.5rem] border border-white/5">
+                  <h6 className="text-neon-blue opacity-40 uppercase tracking-[0.4em] font-black text-[10px] mb-4">Philosophy</h6>
+                  <p className="text-lg font-light leading-relaxed">{insight.philosophicalStatement}</p>
                 </div>
-                <div className="bg-black/40 p-10 rounded-[2rem] border border-white/5 hover:border-neon-magenta/30 transition-colors group">
-                  <h6 className="text-neon-magenta opacity-40 uppercase tracking-widest mb-4 group-hover:opacity-100 transition-opacity">Mapping Protocol</h6>
-                  <p className="text-xl font-light leading-relaxed">{insight.modernReframing}</p>
+                <div className="bg-black/40 p-10 rounded-[2.5rem] border border-white/5">
+                  <h6 className="text-neon-magenta opacity-40 uppercase tracking-[0.4em] font-black text-[10px] mb-4">Reframing</h6>
+                  <p className="text-lg font-light leading-relaxed">{insight.modernReframing}</p>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="py-24 text-center opacity-10">
-              <span className="material-symbols-outlined text-9xl mb-4">auto_stories</span>
-              <p className="uppercase tracking-[0.5em] font-black italic">Awaiting Focal Input</p>
             </div>
           )}
         </section>
 
-        <section className="bg-black/20 p-12 rounded-[3rem] border border-white/5 shadow-2xl">
-          <div className="flex items-center gap-6 mb-12">
-            <h4 className="text-neon-yellow m-0">Decision Nexus</h4>
-            <div className="h-[1px] flex-1 bg-white/5"></div>
+        {/* YEARLY ROADMAP */}
+        {yearlyPlan && (
+          <section className="col-span-24 space-y-10">
+            <h4 className="font-cinzel text-neon-yellow text-4xl tracking-widest text-center">Cosmic Roadmap</h4>
+            <p className="text-center text-slate-400 max-w-2xl mx-auto italic mb-12">"{yearlyPlan.introduction}"</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {yearlyPlan.quarters.map((q, idx) => (
+                <QuarterlyCard key={idx} focus={q} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* DECISION SECTION */}
+        <section className="bg-black/20 p-14 rounded-[4rem] border border-white/5 shadow-2xl">
+          <DecisionHistoryChart history={history} />
+          <div className="flex items-center gap-8 mb-14">
+            <h4 className="text-neon-yellow m-0 font-cinzel tracking-widest text-2xl">Decision Nexus</h4>
+            <div className="h-[1px] flex-1 bg-white/10"></div>
           </div>
           <DecisionNexus state={state} onDecision={handleDecision} onUndo={handleUndo} canUndo={history.length > 0} />
         </section>
@@ -203,12 +308,9 @@ const App: React.FC = () => {
         <SageChat focusDimension={state.focusDimension} emotionLevel={state.emotionLevel} />
       </main>
 
-      <footer className="full-bleed py-24 border-t border-white/5 flex flex-col md:flex-row justify-between items-center opacity-30 text-[10px] uppercase tracking-[1em] font-black mt-24">
-        <div className="flex items-center gap-4">
-          <span className="material-symbols-outlined text-neon-magenta">verified_user</span>
-          Neural Alignment Engine v2.8.2
-        </div>
-        <div className="italic text-neon-blue">Prabhupada Framework Protocol 0x43F</div>
+      <footer className="col-span-24 py-24 border-t border-white/5 flex flex-col md:flex-row justify-between items-center opacity-30 text-[10px] uppercase tracking-[1em] font-black mt-24">
+        <div>Neural Alignment Matrix :: Protocol v2.8.2</div>
+        <div className="italic text-neon-blue tracking-[0.5em]">Prabhupada Framework Logic :: 0x43F-SYNC</div>
       </footer>
     </div>
   );
