@@ -35,10 +35,12 @@ const DecisionNexus: React.FC<Props> = ({ state, onDecision }) => {
     }
   ];
 
-  const getBorderColor = (type: string) => {
-    if (type === 'upgrade') return 'border-emerald-500/50 hover:border-emerald-400';
-    if (type === 'downgrade') return 'border-rose-500/50 hover:border-rose-400';
-    return 'border-amber-500/50 hover:border-amber-400';
+  const getStyles = (type: string) => {
+    switch(type) {
+      case 'upgrade': return 'border-emerald-500/40 hover:border-emerald-400 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] text-emerald-400';
+      case 'downgrade': return 'border-rose-500/40 hover:border-rose-400 hover:shadow-[0_0_15px_rgba(244,63,94,0.2)] text-rose-400';
+      default: return 'border-amber-500/40 hover:border-amber-400 hover:shadow-[0_0_15px_rgba(245,158,11,0.2)] text-amber-400';
+    }
   };
 
   return (
@@ -47,18 +49,18 @@ const DecisionNexus: React.FC<Props> = ({ state, onDecision }) => {
         <button
           key={idx}
           onClick={() => onDecision(d.impact)}
-          className={`glass p-4 rounded-xl text-left transition-all duration-300 hover:scale-[1.02] border group ${getBorderColor(d.type)}`}
+          className={`glass p-5 rounded-xl text-left transition-all duration-300 transform hover:scale-[1.03] border group ${getStyles(d.type)}`}
         >
           <div className="flex justify-between items-start mb-2">
-            <span className="font-cinzel text-sm text-accent group-hover:text-white transition-colors">{d.label}</span>
-            <span className={`text-[8px] px-2 py-0.5 rounded font-bold uppercase ${
-              d.type === 'upgrade' ? 'bg-emerald-500/10 text-emerald-500' : 
-              d.type === 'downgrade' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'
+            <span className="font-cinzel text-sm group-hover:text-white transition-colors">{d.label}</span>
+            <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
+              d.type === 'upgrade' ? 'bg-emerald-500/10' : 
+              d.type === 'downgrade' ? 'bg-rose-500/10' : 'bg-amber-500/10'
             }`}>
               {d.type}
             </span>
           </div>
-          <p className="text-[11px] text-subtext leading-relaxed group-hover:text-slate-200 transition-colors">{d.desc}</p>
+          <p className="text-[11px] text-slate-400 leading-relaxed group-hover:text-slate-200 transition-colors">{d.desc}</p>
         </button>
       ))}
     </div>

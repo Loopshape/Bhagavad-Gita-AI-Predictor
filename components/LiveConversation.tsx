@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { getAI, encode, decode, decodeAudioData } from '../services/geminiService';
-import { Modality } from '@google/genai';
+import { Modality, LiveServerMessage } from '@google/genai';
 
 const LiveConversation: React.FC = () => {
   const [active, setActive] = useState(false);
@@ -36,24 +36,42 @@ const LiveConversation: React.FC = () => {
           processor.connect(inputCtx.destination);
           setActive(true);
         },
-        onmessage: async (msg: any) => {
-          if (msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data) {
-            const base64 = msg.serverContent.modelTurn.parts[0].inlineData.data;
+        onmessage: async (msg: LiveServerMessage) => {
+          const base64 = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+          if (base64) {
             const ctx = audioContextRef.current!;
             nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
             const buffer = await decodeAudioData(decode(base64), ctx, 24000, 1);
             const source = ctx.createBufferSource();
             source.buffer = buffer;
             source.connect(ctx.destination);
+            source.addEventListener('ended', () => {
+              sourcesRef.current.delete(source);
+            });
             source.start(nextStartTimeRef.current);
             nextStartTimeRef.current += buffer.duration;
             sourcesRef.current.add(source);
           }
+
+          if (msg.serverContent?.interrupted) {
+            for (const source of sourcesRef.current.values()) {
+              try { source.stop(); } catch (e) {}
+              sourcesRef.current.delete(source);
+            }
+            nextStartTimeRef.current = 0;
+          }
+
           if (msg.serverContent?.outputTranscription) {
-             setTranscription(prev => prev + ' ' + msg.serverContent.outputTranscription.text);
+             setTranscription(prev => prev + ' ' + msg.serverContent!.outputTranscription!.text);
           }
         },
-        onclose: () => setActive(false),
+        onclose: () => {
+          setActive(false);
+          for (const source of sourcesRef.current.values()) {
+            try { source.stop(); } catch (e) {}
+          }
+          sourcesRef.current.clear();
+        },
         onerror: (e) => console.error(e)
       },
       config: {

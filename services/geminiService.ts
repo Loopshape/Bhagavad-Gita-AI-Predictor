@@ -2,180 +2,224 @@
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
 import { GitaInsight, YearlyDedication } from "../types";
 
+/**
+ * Creates a fresh instance of GoogleGenAI using the latest API key from environment/context.
+ */
 export const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+/**
+ * Robust wrapper for API calls to handle 500 errors (retry) and 
+ * 403/Requested entity not found errors (prompt for key selection).
+ */
+async function apiWrapper<T>(fn: (ai: GoogleGenAI) => Promise<T>, retries = 2): Promise<T> {
+  const ai = getAI();
+  try {
+    return await fn(ai);
+  } catch (error: any) {
+    const errorMsg = error.message || "";
+    const isPermissionError = errorMsg.includes("Requested entity was not found") || 
+                              errorMsg.includes("PERMISSION_DENIED") || 
+                              error.status === 403 || 
+                              error.code === 403;
+
+    if (isPermissionError && window.aistudio?.openSelectKey) {
+      console.warn("Permission denied or entity not found. Prompting for API key selection...");
+      await window.aistudio.openSelectKey();
+      // Retry once after key selection
+      const newAi = getAI();
+      return await fn(newAi);
+    }
+
+    if (retries > 0 && (error.status >= 500 || error.code >= 500)) {
+      console.warn(`Internal error (500). Retrying... (${retries} attempts left)`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return apiWrapper(fn, retries - 1);
+    }
+
+    throw error;
+  }
+}
 
 export const generateGitaInsight = async (
   name: string,
   state: { emotionLevel: number; energyVector: number; dimension: string }
 ): Promise<GitaInsight> => {
-  const ai = getAI();
-  const prompt = `
-    Context: You are a sophisticated spiritual AI sage based on the Bhagavad-Gita "As It Is" (Prabhupada Edition).
-    User: ${name}
-    Current Mental Shape:
-    - Emotional Valence: ${state.emotionLevel} (-100 to 100)
-    - Energy Level: ${state.energyVector} (0 to 100)
-    - Primary Focus Dimension: ${state.dimension}
-    
-    Task:
-    1. Generate a modern "Gita Verse" structure.
-    2. Provide a philosophical statement with deeper insight.
-    3. Summarize it in a short, powerful text.
-    4. Provide a "Modern Psychological Reframing" that aligns the Gita's teachings with current digital/social habits.
-  `;
+  return apiWrapper(async (ai) => {
+    const prompt = `
+      Context: You are a sophisticated spiritual AI sage based on the Bhagavad-Gita "As It Is" (Prabhupada Edition).
+      User: ${name}
+      Current Mental Shape:
+      - Emotional Valence: ${state.emotionLevel} (-100 to 100)
+      - Energy Level: ${state.energyVector} (0 to 100)
+      - Primary Focus Dimension: ${state.dimension}
+      
+      Task:
+      1. Generate a modern "Gita Verse" structure.
+      2. Provide a philosophical statement with deeper insight.
+      3. Summarize it in a short, powerful text.
+      4. Provide a "Modern Psychological Reframing" that aligns the Gita's teachings with current digital/social habits.
+    `;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          verse: { type: Type.STRING },
-          summary: { type: Type.STRING },
-          philosophicalStatement: { type: Type.STRING },
-          modernReframing: { type: Type.STRING },
-        },
-        required: ["verse", "summary", "philosophicalStatement", "modernReframing"]
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            verse: { type: Type.STRING },
+            summary: { type: Type.STRING },
+            philosophicalStatement: { type: Type.STRING },
+            modernReframing: { type: Type.STRING },
+          },
+          required: ["verse", "summary", "philosophicalStatement", "modernReframing"]
+        }
       }
-    }
-  });
+    });
 
-  return JSON.parse(response.text || "{}");
+    return JSON.parse(response.text || "{}");
+  });
 };
 
 export const generateYearlyDedication = async (profile: { name: string, birthDate: string }): Promise<YearlyDedication> => {
-  const ai = getAI();
-  const prompt = `
-    Generate a "Yearly Dedication Workflow" inspired by the Bhagavad Gita for:
-    Name: ${profile.name}
-    Birth Date: ${profile.birthDate}
-    
-    Blend ancient Vedic wisdom (Sattva, Rajas, Tamas) with modern psychological framing.
-    The response must be a structured plan for the upcoming 12 months.
-  `;
+  return apiWrapper(async (ai) => {
+    const prompt = `
+      Generate a "Yearly Dedication Workflow" inspired by the Bhagavad Gita for:
+      Name: ${profile.name}
+      Birth Date: ${profile.birthDate}
+      
+      Blend ancient Vedic wisdom (Sattva, Rajas, Tamas) with modern psychological framing.
+      The response must be a structured plan for the upcoming 12 months.
+    `;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          introduction: { type: Type.STRING },
-          coreSpiritualLesson: { type: Type.STRING },
-          quarters: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                quarter: { type: Type.STRING },
-                theme: { type: Type.STRING },
-                gitaVerse: { type: Type.STRING },
-                balancingAction: { type: Type.STRING }
-              },
-              required: ["quarter", "theme", "gitaVerse", "balancingAction"]
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            introduction: { type: Type.STRING },
+            coreSpiritualLesson: { type: Type.STRING },
+            quarters: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  quarter: { type: Type.STRING },
+                  theme: { type: Type.STRING },
+                  gitaVerse: { type: Type.STRING },
+                  balancingAction: { type: Type.STRING }
+                },
+                required: ["quarter", "theme", "gitaVerse", "balancingAction"]
+              }
             }
-          }
-        },
-        required: ["introduction", "coreSpiritualLesson", "quarters"]
+          },
+          required: ["introduction", "coreSpiritualLesson", "quarters"]
+        }
       }
-    }
-  });
+    });
 
-  return JSON.parse(response.text || "{}");
+    return JSON.parse(response.text || "{}");
+  });
 };
 
 export const searchGitaWisdom = async (query: string) => {
-  const ai = getAI();
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: query,
-    config: {
-      tools: [{ googleSearch: {} }],
-    },
-  });
-  
-  const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks
-    ?.map((chunk: any) => chunk.web)
-    .filter((web: any) => !!web) || [];
+  return apiWrapper(async (ai) => {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: query,
+      config: {
+        tools: [{ googleSearch: {} }],
+      },
+    });
     
-  return { text: response.text, sources };
+    const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks
+      ?.map((chunk: any) => chunk.web)
+      .filter((web: any) => !!web) || [];
+      
+    return { text: response.text, sources };
+  });
 };
 
 export const chatWithThinking = async (query: string) => {
-  const ai = getAI();
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-preview',
-    contents: query,
-    config: {
-      thinkingConfig: { thinkingBudget: 32768 }
-    },
+  return apiWrapper(async (ai) => {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-pro-preview',
+      contents: query,
+      config: {
+        thinkingConfig: { thinkingBudget: 32768 }
+      },
+    });
+    return response.text;
   });
-  return response.text;
 };
 
 export const generateProImage = async (prompt: string, size: "1K" | "2K" | "4K") => {
-  const ai = getAI();
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-image-preview',
-    contents: { parts: [{ text: prompt }] },
-    config: {
-      imageConfig: { aspectRatio: "1:1", imageSize: size }
+  return apiWrapper(async (ai) => {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-pro-image-preview',
+      contents: { parts: [{ text: prompt }] },
+      config: {
+        imageConfig: { aspectRatio: "1:1", imageSize: size }
+      }
+    });
+    
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
+      if (part.inlineData) {
+        return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+      }
     }
+    return null;
   });
-  
-  for (const part of response.candidates[0].content.parts) {
-    if (part.inlineData) {
-      return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-    }
-  }
-  return null;
 };
 
 export const analyzeSpiritualImage = async (base64Data: string, mimeType: string) => {
-  const ai = getAI();
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-preview',
-    contents: {
-      parts: [
-        { inlineData: { data: base64Data, mimeType } },
-        { text: "Analyze this image's spiritual and psychological alignment. Does it represent Sattva, Rajas, or Tamas?" }
-      ]
-    }
+  return apiWrapper(async (ai) => {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-pro-preview',
+      contents: {
+        parts: [
+          { inlineData: { data: base64Data, mimeType } },
+          { text: "Analyze this image's spiritual and psychological alignment. Does it represent Sattva, Rajas, or Tamas?" }
+        ]
+      }
+    });
+    return response.text;
   });
-  return response.text;
 };
 
 export const transcribeAudio = async (base64Audio: string) => {
-  const ai = getAI();
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: {
-      parts: [
-        { inlineData: { data: base64Audio, mimeType: 'audio/wav' } },
-        { text: "Transcribe this audio exactly." }
-      ]
-    }
+  return apiWrapper(async (ai) => {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: {
+        parts: [
+          { inlineData: { data: base64Audio, mimeType: 'audio/wav' } },
+          { text: "Transcribe this audio exactly." }
+        ]
+      }
+    });
+    return response.text;
   });
-  return response.text;
 };
 
 export const generateSpeech = async (text: string) => {
-  const ai = getAI();
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-preview-tts",
-    contents: [{ parts: [{ text }] }],
-    config: {
-      responseModalities: [Modality.AUDIO],
-      speechConfig: {
-        voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } },
+  return apiWrapper(async (ai) => {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [{ parts: [{ text }] }],
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+          voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } },
+        },
       },
-    },
+    });
+    return response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
   });
-  return response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
 };
 
 export function decode(base64: string) {
