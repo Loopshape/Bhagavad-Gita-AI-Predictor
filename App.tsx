@@ -6,34 +6,119 @@ import DecisionNexus from './components/DecisionNexus';
 import SageChat from './components/SageChat';
 import VisualArsenal from './components/VisualArsenal';
 import LiveConversation from './components/LiveConversation';
-import { generateGitaInsight, generateYearlyDedication } from './services/geminiService';
+import { generateGitaInsight, generateYearlyDedication, getExpandedGitaDetails } from './services/geminiService';
+import { COLORS } from './constants';
 
-const YearlyRoadmap: React.FC<{ plan: YearlyDedication }> = ({ plan }) => (
-  <div className="space-y-6">
-    <div className="glass p-6 rounded-2xl bg-gradient-to-br from-accent/5 to-transparent border border-white/10">
-      <h3 className="font-cinzel text-xl text-accent mb-2">Yearly Dedication Workflow</h3>
-      <p className="text-sm text-subtext leading-relaxed mb-4">{plan.introduction}</p>
-      <div className="bg-white/5 p-4 rounded-xl border border-white/10 italic text-accent text-sm shadow-inner">
-        "Core Lesson: {plan.coreSpiritualLesson}"
+const YearlyRoadmap: React.FC<{ plan: YearlyDedication }> = ({ plan }) => {
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
+  const [details, setDetails] = useState<Record<number, string>>({});
+  const [loadingDetails, setLoadingDetails] = useState<Record<number, boolean>>({});
+
+  const handleToggle = async (idx: number) => {
+    if (expandedIdx === idx) {
+      setExpandedIdx(null);
+      return;
+    }
+    setExpandedIdx(idx);
+
+    if (!details[idx]) {
+      setLoadingDetails(prev => ({ ...prev, [idx]: true }));
+      try {
+        const result = await getExpandedGitaDetails(plan.quarters[idx].gitaVerse, plan.quarters[idx].balancingAction);
+        setDetails(prev => ({ ...prev, [idx]: result }));
+      } catch (e) {
+        setDetails(prev => ({ ...prev, [idx]: "Failed to expand details. Connection to the infinite wisdom interrupted." }));
+      } finally {
+        setLoadingDetails(prev => ({ ...prev, [idx]: false }));
+      }
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="glass p-6 rounded-2xl bg-gradient-to-br from-accent/5 to-transparent border border-white/10">
+        <h3 className="font-cinzel text-xl text-accent mb-2">Yearly Dedication Workflow</h3>
+        <p className="text-sm text-subtext leading-relaxed mb-4">{plan.introduction}</p>
+        <div className="bg-white/5 p-4 rounded-xl border border-white/10 italic text-accent text-sm shadow-inner">
+          "Core Lesson: {plan.coreSpiritualLesson}"
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {plan.quarters.map((q, idx) => (
+          <div 
+            key={idx} 
+            onClick={() => handleToggle(idx)}
+            className={`glass p-5 rounded-xl border-l-4 border-accent transition-all duration-300 cursor-pointer group ${expandedIdx === idx ? 'md:col-span-2' : 'hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]'}`}
+          >
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-[10px] font-bold uppercase text-subtext group-hover:text-accent transition-colors">{q.quarter}</span>
+              <span className="text-xs font-cinzel text-accent">{q.theme}</span>
+            </div>
+            <p className="text-xs italic text-slate-300 mb-3 leading-relaxed">"{q.gitaVerse}"</p>
+            <div className="text-[10px] bg-accent/10 p-2 rounded text-accent flex gap-2 items-center border border-accent/5">
+              <span className="font-bold">ACTIVATE:</span> {q.balancingAction}
+            </div>
+            {expandedIdx === idx && (
+              <div className="mt-4 pt-4 border-t border-white/10 animate-in fade-in slide-in-from-top-2 duration-300">
+                {loadingDetails[idx] ? (
+                  <div className="text-[10px] text-subtext italic animate-pulse">Expanding Gita wisdom...</div>
+                ) : (
+                  <div className="text-[11px] text-slate-400 leading-relaxed whitespace-pre-wrap">
+                    {details[idx]}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
-    
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {plan.quarters.map((q, idx) => (
-        <div key={idx} className="glass p-5 rounded-xl border-l-4 border-accent hover:border-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] cursor-default group">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-[10px] font-bold uppercase text-subtext group-hover:text-accent transition-colors">{q.quarter}</span>
-            <span className="text-xs font-cinzel text-accent">{q.theme}</span>
-          </div>
-          <p className="text-xs italic text-slate-300 mb-3 leading-relaxed">"{q.gitaVerse}"</p>
-          <div className="text-[10px] bg-accent/10 p-2 rounded text-accent flex gap-2 items-center border border-accent/5">
-            <span className="font-bold">ACTIVATE:</span> {q.balancingAction}
-          </div>
+  );
+};
+
+const DecisionHistoryChart: React.FC<{ history: AlignmentState[], current: AlignmentState }> = ({ history, current }) => {
+  const data = [...history, current];
+  if (data.length < 2) return null;
+
+  const maxPoints = 20;
+  const recentData = data.slice(-maxPoints);
+
+  return (
+    <div className="glass p-4 rounded-2xl border border-white/5 space-y-3">
+      <div className="flex justify-between items-center">
+        <h4 className="text-[10px] uppercase font-bold text-subtext tracking-widest">Impact Sequence</h4>
+        <div className="flex gap-4">
+          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500"></div><span className="text-[8px] text-subtext">Emotion</span></div>
+          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500"></div><span className="text-[8px] text-subtext">Energy</span></div>
         </div>
-      ))}
+      </div>
+      <div className="h-16 flex items-end gap-1 px-1">
+        {recentData.map((d, i) => (
+          <div key={i} className="flex-1 flex flex-col justify-end gap-0.5 group relative">
+            {/* Emotion Bar */}
+            <div 
+              className="w-full bg-emerald-500/30 group-hover:bg-emerald-500/50 transition-all rounded-t-sm"
+              style={{ height: `${(d.emotionLevel + 100) / 2}%` }}
+            />
+            {/* Energy Bar */}
+            <div 
+              className="w-full bg-amber-500/30 group-hover:bg-amber-500/50 transition-all rounded-t-sm"
+              style={{ height: `${d.energyVector}%` }}
+            />
+            
+            {/* Tooltip-ish */}
+            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block z-10">
+              <div className="glass p-2 rounded shadow-xl border border-white/10 text-[8px] whitespace-nowrap">
+                E: {d.emotionLevel.toFixed(0)} | V: {d.energyVector.toFixed(0)}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const App: React.FC = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -303,6 +388,9 @@ const App: React.FC = () => {
                   <div className="w-1.5 h-6 bg-accent/40 rounded-full"></div>
                   <h3 className="font-cinzel text-xl text-accent/80">Decision Nexus</h3>
               </div>
+              
+              <DecisionHistoryChart history={history} current={state} />
+
               <DecisionNexus 
                 state={state} 
                 onDecision={handleDecision} 
@@ -313,7 +401,7 @@ const App: React.FC = () => {
 
           {yearlyPlan && <YearlyRoadmap plan={yearlyPlan} />}
           
-          <SageChat />
+          <SageChat focusDimension={state.focusDimension} emotionLevel={state.emotionLevel} />
         </div>
       </div>
       

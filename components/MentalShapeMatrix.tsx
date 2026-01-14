@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import * as d3 from 'd3';
 import { AlignmentState } from '../types';
 import { COLORS } from '../constants';
@@ -11,6 +11,13 @@ interface Props {
 
 const MentalShapeMatrix: React.FC<Props> = ({ state, onChange }) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const [localDimension, setLocalDimension] = useState<AlignmentState['focusDimension'] | 'Default'>(state.focusDimension);
+
+  useEffect(() => {
+    setLocalDimension(state.focusDimension);
+  }, [state.focusDimension]);
+
+  const activeDimension = localDimension === 'Default' ? state.focusDimension : localDimension;
 
   const prognosis = useMemo(() => {
     if (state.emotionLevel > 30 && state.energyVector > 50) return { label: "Sattvic Clarity", desc: "Stable energy, positive outlook. High prognosis for growth.", color: COLORS.positive };
@@ -32,11 +39,20 @@ const MentalShapeMatrix: React.FC<Props> = ({ state, onChange }) => {
     const xScale = d3.scaleLinear().domain([-100, 100]).range([margin, width - margin]);
     const yScale = d3.scaleLinear().domain([0, 100]).range([height - margin, margin]);
 
+    // Opacity logic based on focusDimension
+    const getOpacity = (zone: 'Tamas' | 'Rajas' | 'Sattva') => {
+      if (activeDimension === 'Spiritual' && zone === 'Sattva') return 0.25;
+      if (activeDimension === 'Material' && zone === 'Rajas') return 0.25;
+      if (activeDimension === 'Digital' && zone === 'Rajas') return 0.2;
+      if (activeDimension === 'Social' && zone === 'Tamas') return 0.15;
+      return 0.05;
+    };
+
     // Zones
     const zones = [
-        { x: [-100, -20], y: [0, 40], color: 'rgba(255, 62, 62, 0.05)', label: 'Tamas' },
-        { x: [-100, 100], y: [60, 100], color: 'rgba(245, 158, 11, 0.05)', label: 'Rajas' },
-        { x: [20, 100], y: [40, 80], color: 'rgba(0, 255, 128, 0.05)', label: 'Sattva' }
+        { x: [-100, -20], y: [0, 40], color: COLORS.negative, label: 'Tamas', type: 'Tamas' },
+        { x: [-100, 100], y: [60, 100], color: COLORS.accent, label: 'Rajas', type: 'Rajas' },
+        { x: [20, 100], y: [40, 80], color: COLORS.positive, label: 'Sattva', type: 'Sattva' }
     ];
 
     zones.forEach(z => {
@@ -46,13 +62,14 @@ const MentalShapeMatrix: React.FC<Props> = ({ state, onChange }) => {
             .attr("width", xScale(z.x[1]) - xScale(z.x[0]))
             .attr("height", yScale(z.y[0]) - yScale(z.y[1]))
             .attr("fill", z.color)
+            .attr("opacity", getOpacity(z.type as any))
             .attr("rx", 10);
         
         svg.append("text")
             .attr("x", xScale(z.x[0]) + 5)
             .attr("y", yScale(z.y[1]) + 15)
             .attr("fill", "white")
-            .attr("opacity", 0.2)
+            .attr("opacity", 0.4)
             .attr("class", "text-[8px] font-bold uppercase")
             .text(z.label);
     });
@@ -101,13 +118,23 @@ const MentalShapeMatrix: React.FC<Props> = ({ state, onChange }) => {
         })
       );
 
-  }, [state, onChange]);
+  }, [state, onChange, activeDimension]);
 
   return (
     <div className="glass p-6 rounded-2xl">
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-cinzel text-lg text-accent">Mental Prognose</h3>
-        <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-subtext uppercase tracking-widest">Vector Driven Scope</span>
+        <select 
+          value={localDimension}
+          onChange={(e) => setLocalDimension(e.target.value as any)}
+          className="text-[9px] bg-white/5 border border-white/10 rounded px-2 py-1 focus:outline-none text-subtext uppercase"
+        >
+          <option value="Default">Auto: {state.focusDimension}</option>
+          <option value="Material">Material</option>
+          <option value="Spiritual">Spiritual</option>
+          <option value="Digital">Digital</option>
+          <option value="Social">Social</option>
+        </select>
       </div>
       
       <div className="relative">

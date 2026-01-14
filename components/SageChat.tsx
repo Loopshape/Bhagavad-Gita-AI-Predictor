@@ -1,9 +1,14 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage } from '../types';
-import { chatWithThinking, searchGitaWisdom, generateSpeech, decode, decodeAudioData } from '../services/geminiService';
+import { chatWithThinking, searchGitaWisdom, generateSpeech, decode, decodeAudioData, generateReflectionPrompt } from '../services/geminiService';
 
-const SageChat: React.FC = () => {
+interface Props {
+  focusDimension: string;
+  emotionLevel: number;
+}
+
+const SageChat: React.FC<Props> = ({ focusDimension, emotionLevel }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -48,11 +53,29 @@ const SageChat: React.FC = () => {
     source.start();
   };
 
+  const handleReflection = async () => {
+    setLoading(true);
+    try {
+      const prompt = await generateReflectionPrompt(focusDimension, emotionLevel);
+      setMessages(prev => [...prev, { role: 'model', text: `✨ Self-Reflection Prompt: ${prompt}` }]);
+    } catch (e) {
+       setMessages(prev => [...prev, { role: 'model', text: "The inner eye is clouded. Try again later." }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="glass rounded-2xl flex flex-col h-[500px]">
       <div className="p-4 border-b border-white/10 flex flex-wrap justify-between items-center gap-2">
         <h3 className="font-cinzel text-accent">Sage Consultation</h3>
         <div className="flex gap-4 items-center">
+          <button 
+            onClick={handleReflection}
+            className="text-[9px] uppercase font-bold text-accent border border-accent/30 px-3 py-1 rounded hover:bg-accent/10 transition-all"
+          >
+            Reflect
+          </button>
           <div className="flex gap-1 items-center">
             <label className="text-[9px] uppercase tracking-tighter text-subtext">Concise</label>
             <button 
