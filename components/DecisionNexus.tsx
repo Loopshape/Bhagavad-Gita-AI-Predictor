@@ -35,24 +35,30 @@ const DecisionNexus: React.FC<Props> = ({ state, onDecision }) => {
     }
   ];
 
+  const getBorderColor = (type: string) => {
+    if (type === 'upgrade') return 'border-emerald-500/50 hover:border-emerald-400';
+    if (type === 'downgrade') return 'border-rose-500/50 hover:border-rose-400';
+    return 'border-amber-500/50 hover:border-amber-400';
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {decisions.map((d, idx) => (
         <button
           key={idx}
           onClick={() => onDecision(d.impact)}
-          className="glass p-4 rounded-xl text-left hover:border-accent transition-all group"
+          className={`glass p-4 rounded-xl text-left transition-all duration-300 hover:scale-[1.02] border group ${getBorderColor(d.type)}`}
         >
           <div className="flex justify-between items-start mb-2">
-            <span className="font-cinzel text-sm text-accent group-hover:text-white">{d.label}</span>
-            <span className={`text-[10px] px-2 py-0.5 rounded border ${
-              d.type === 'upgrade' ? 'border-green-500 text-green-500' : 
-              d.type === 'downgrade' ? 'border-red-500 text-red-500' : 'border-blue-500 text-blue-500'
+            <span className="font-cinzel text-sm text-accent group-hover:text-white transition-colors">{d.label}</span>
+            <span className={`text-[8px] px-2 py-0.5 rounded font-bold uppercase ${
+              d.type === 'upgrade' ? 'bg-emerald-500/10 text-emerald-500' : 
+              d.type === 'downgrade' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'
             }`}>
-              {d.type.toUpperCase()}
+              {d.type}
             </span>
           </div>
-          <p className="text-xs text-subtext leading-relaxed">{d.desc}</p>
+          <p className="text-[11px] text-subtext leading-relaxed group-hover:text-slate-200 transition-colors">{d.desc}</p>
         </button>
       ))}
     </div>

@@ -30,6 +30,13 @@ export interface GitaInsight {
   modernReframing: string;
 }
 
+export interface ChatMessage {
+  role: 'user' | 'model';
+  text: string;
+  thought?: string;
+  sources?: { uri: string; title: string }[];
+}
+
 export enum GunaType {
   SATTVA = 'SATTVA',
   RAJAS = 'RAJAS',

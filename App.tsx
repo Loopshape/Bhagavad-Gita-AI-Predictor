@@ -1,10 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { UserProfile, AlignmentState, GitaInsight, YearlyDedication } from './types';
 import MentalShapeMatrix from './components/MentalShapeMatrix';
 import DecisionNexus from './components/DecisionNexus';
+import SageChat from './components/SageChat';
+import VisualArsenal from './components/VisualArsenal';
+import LiveConversation from './components/LiveConversation';
 import { generateGitaInsight, generateYearlyDedication } from './services/geminiService';
-import { COLORS } from './constants';
 
 const YearlyRoadmap: React.FC<{ plan: YearlyDedication }> = ({ plan }) => (
   <div className="space-y-6">
@@ -18,7 +20,7 @@ const YearlyRoadmap: React.FC<{ plan: YearlyDedication }> = ({ plan }) => (
     
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {plan.quarters.map((q, idx) => (
-        <div key={idx} className="glass p-5 rounded-xl border-l-4 border-accent">
+        <div key={idx} className="glass p-5 rounded-xl border-l-4 border-accent hover:border-white transition-all">
           <div className="flex justify-between items-center mb-2">
             <span className="text-[10px] font-bold uppercase text-subtext">{q.quarter}</span>
             <span className="text-xs font-cinzel text-accent">{q.theme}</span>
@@ -53,7 +55,7 @@ const App: React.FC = () => {
         setYearlyPlan(plan);
         setProfile(tempProfile);
       } catch (e) {
-        console.error("Yearly plan failed", e);
+        console.error(e);
         setProfile(tempProfile);
       } finally {
         setLoading(false);
@@ -72,18 +74,21 @@ const App: React.FC = () => {
       });
       setInsight(result);
     } catch (error) {
-      console.error("Insight failed", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDecision = (impact: Partial<AlignmentState>) => {
-    setState(prev => ({
-      ...prev,
-      emotionLevel: Math.max(-100, Math.min(100, prev.emotionLevel + (impact.emotionLevel || 0))),
-      energyVector: Math.max(0, Math.min(100, prev.energyVector + (impact.energyVector || 0)))
-    }));
+  const shareInsight = () => {
+    if (!insight) return;
+    const text = `Gita Insight for ${profile?.name}:\n"${insight.verse}"\n\nLesson: ${insight.philosophicalStatement}\nModern: ${insight.modernReframing}`;
+    if (navigator.share) {
+      navigator.share({ title: 'Gita Alignment Insight', text });
+    } else {
+      navigator.clipboard.writeText(text);
+      alert('Insight copied to clipboard!');
+    }
   };
 
   if (!profile) {
@@ -96,13 +101,13 @@ const App: React.FC = () => {
             <input
               type="text"
               placeholder="Full Name"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent text-sm"
               value={tempProfile.name}
               onChange={(e) => setTempProfile({ ...tempProfile, name: e.target.value })}
             />
             <input
               type="date"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent text-sm"
               value={tempProfile.birthDate}
               onChange={(e) => setTempProfile({ ...tempProfile, birthDate: e.target.value })}
             />
@@ -123,68 +128,80 @@ const App: React.FC = () => {
     <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto space-y-8">
       <header className="glass p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-          <h2 className="font-cinzel text-2xl text-accent">{profile.name}'s Dedication Matrix</h2>
-          <p className="text-xs text-subtext uppercase tracking-widest">Born: {profile.birthDate} | Alignment Status: Active</p>
+          <h2 className="font-cinzel text-2xl text-accent">{profile.name}'s Alignment</h2>
+          <p className="text-[10px] text-subtext uppercase tracking-[0.2em]">Matrix Status: Operational | Year Workflow Active</p>
         </div>
-        <div className="flex gap-6">
-          <div className="text-center">
-            <div className="text-[10px] text-subtext uppercase">Guna State</div>
-            <div className="text-sm font-bold text-accent">BALANCED</div>
-          </div>
-          <div className="text-center border-l border-white/10 pl-6">
-            <div className="text-[10px] text-subtext uppercase">Prognose Vector</div>
-            <div className="text-sm font-bold text-green-500">{state.energyVector.toFixed(0)}% OPR</div>
-          </div>
+        <div className="flex gap-4">
+          {['Material', 'Spiritual', 'Digital', 'Social'].map(dim => (
+            <button
+              key={dim}
+              onClick={() => setState(s => ({ ...s, focusDimension: dim as any }))}
+              className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all border ${
+                state.focusDimension === dim 
+                ? 'bg-accent border-accent text-black' 
+                : 'bg-transparent border-white/10 text-subtext hover:border-white/30'
+              }`}
+            >
+              {dim}
+            </button>
+          ))}
         </div>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left: Visualization & Decisions */}
+        {/* Visual & Interactive Column */}
         <div className="lg:col-span-4 space-y-8">
           <MentalShapeMatrix state={state} onChange={setState} />
-          <section className="space-y-4">
-            <h3 className="font-cinzel text-lg text-accent">Elemental Decisions</h3>
-            <DecisionNexus state={state} onDecision={handleDecision} />
-          </section>
+          <LiveConversation />
+          <VisualArsenal />
         </div>
 
-        {/* Right: Insights & Yearly Plan */}
+        {/* Knowledge & Planning Column */}
         <div className="lg:col-span-8 space-y-8">
+          <section className="space-y-4">
+             <div className="flex justify-between items-center">
+                <h3 className="font-cinzel text-xl text-accent">Spiritual Synthesis</h3>
+                <div className="flex gap-2">
+                  {insight && (
+                    <button onClick={shareInsight} className="text-[10px] border border-white/10 px-3 py-1 rounded-lg hover:bg-white/5 transition-all">Share</button>
+                  )}
+                  <button 
+                    onClick={fetchInsight}
+                    disabled={loading}
+                    className={`text-[10px] border border-accent/30 px-3 py-1 rounded-lg transition-all ${loading ? 'opacity-50 cursor-wait' : 'hover:bg-accent/10'}`}
+                  >
+                    {loading ? 'Synthesizing...' : 'Seek Insight'}
+                  </button>
+                </div>
+             </div>
+             {insight && (
+               <div className="glass p-6 rounded-2xl border border-accent/20 bg-accent/5 animate-in fade-in duration-700">
+                  <p className="italic text-lg font-cinzel text-center mb-6">"{insight.verse}"</p>
+                  <div className="grid md:grid-cols-2 gap-4">
+                     <div className="p-3 bg-black/20 rounded-xl">
+                        <span className="text-[8px] font-bold text-accent uppercase block mb-1">Deeper Insight</span>
+                        <p className="text-xs italic leading-relaxed">{insight.philosophicalStatement}</p>
+                     </div>
+                     <div className="p-3 bg-black/20 rounded-xl">
+                        <span className="text-[8px] font-bold text-accent uppercase block mb-1">Modern Framing</span>
+                        <p className="text-xs leading-relaxed">{insight.modernReframing}</p>
+                     </div>
+                  </div>
+               </div>
+             )}
+          </section>
+
+          <DecisionNexus state={state} onDecision={impact => {
+             setState(prev => ({
+                ...prev,
+                emotionLevel: Math.max(-100, Math.min(100, prev.emotionLevel + (impact.emotionLevel || 0))),
+                energyVector: Math.max(0, Math.min(100, prev.energyVector + (impact.energyVector || 0)))
+             }));
+          }} />
+
           {yearlyPlan && <YearlyRoadmap plan={yearlyPlan} />}
           
-          <section className="space-y-6">
-            <div className="flex justify-between items-center border-b border-white/10 pb-4">
-              <h3 className="font-cinzel text-xl text-accent">Spiritual Synthesis</h3>
-              <button 
-                onClick={fetchInsight}
-                disabled={loading}
-                className="text-xs bg-white/5 hover:bg-white/10 border border-white/20 px-4 py-2 rounded-lg transition-all"
-              >
-                {loading ? 'Syncing...' : 'Seek Deeper Insight'}
-              </button>
-            </div>
-
-            {insight && (
-              <div className="glass p-8 rounded-3xl border border-accent/20 relative group">
-                <div className="space-y-6">
-                  <div className="italic text-lg text-accent font-cinzel leading-relaxed text-center">
-                    "{insight.verse}"
-                  </div>
-                  <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="text-[10px] font-bold text-subtext mb-2">PHILOSOPHICAL STATEMENT</h4>
-                      <p className="text-xs leading-relaxed text-slate-300 italic">{insight.philosophicalStatement}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-[10px] font-bold text-subtext mb-2">MODERN PSYCHOLOGICAL FRAMING</h4>
-                      <p className="text-xs leading-relaxed text-accent/80">{insight.modernReframing}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </section>
+          <SageChat />
         </div>
       </div>
     </div>
