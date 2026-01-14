@@ -177,7 +177,7 @@ export const chatWithThinking = async (query: string, concise: boolean = false) 
       contents: query,
       config: {
         systemInstruction,
-        thinkingConfig: { thinkingBudget: 32768 }
+        thinkingConfig: { thinkingBudget: concise ? 0 : 32768 }
       },
     });
     return response.text;

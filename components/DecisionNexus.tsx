@@ -37,11 +37,11 @@ const DecisionNexus: React.FC<Props> = ({ state, onDecision, onUndo, canUndo }) 
     }
   ];
 
-  const getStyles = (type: string) => {
+  const getBorderClass = (type: string) => {
     switch(type) {
-      case 'upgrade': return 'border-emerald-500/40 hover:border-emerald-400 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] text-emerald-400';
-      case 'downgrade': return 'border-rose-500/40 hover:border-rose-400 hover:shadow-[0_0_15px_rgba(244,63,94,0.2)] text-rose-400';
-      default: return 'border-amber-500/40 hover:border-amber-400 hover:shadow-[0_0_15px_rgba(245,158,11,0.2)] text-amber-400';
+      case 'upgrade': return 'border-emerald-500/50 hover:border-emerald-400 text-emerald-400';
+      case 'downgrade': return 'border-rose-500/50 hover:border-rose-400 text-rose-400';
+      default: return 'border-amber-500/50 hover:border-amber-400 text-amber-400';
     }
   };
 
@@ -52,11 +52,11 @@ const DecisionNexus: React.FC<Props> = ({ state, onDecision, onUndo, canUndo }) 
           <button
             key={idx}
             onClick={() => onDecision(d.impact)}
-            className={`glass p-5 rounded-xl text-left transition-all duration-300 transform hover:scale-[1.03] border group ${getStyles(d.type)}`}
+            className={`glass p-5 rounded-xl text-left transition-all duration-300 transform hover:scale-[1.02] border group ${getBorderClass(d.type)}`}
           >
             <div className="flex justify-between items-start mb-2">
               <span className="font-cinzel text-sm group-hover:text-white transition-colors">{d.label}</span>
-              <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
+              <span className={`text-[9px] px-2 py-0.5 rounded font-black uppercase tracking-wider ${
                 d.type === 'upgrade' ? 'bg-emerald-500/10' : 
                 d.type === 'downgrade' ? 'bg-rose-500/10' : 'bg-amber-500/10'
               }`}>
@@ -70,9 +70,9 @@ const DecisionNexus: React.FC<Props> = ({ state, onDecision, onUndo, canUndo }) 
       {canUndo && (
         <button 
           onClick={onUndo}
-          className="w-full py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] uppercase font-bold tracking-widest hover:bg-white/10 transition-colors text-subtext"
+          className="w-full py-2.5 bg-white/5 border border-white/10 rounded-xl text-[10px] uppercase font-black tracking-[0.2em] hover:bg-white/10 transition-colors text-subtext flex items-center justify-center gap-2 group"
         >
-          Undo Last Decision
+          <span className="group-hover:-translate-x-1 transition-transform">↺</span> Undo Last Decision
         </button>
       )}
     </div>
