@@ -144,12 +144,17 @@ export const searchGitaWisdom = async (query: string) => {
   });
 };
 
-export const chatWithThinking = async (query: string) => {
+export const chatWithThinking = async (query: string, concise: boolean = false) => {
   return apiWrapper(async (ai) => {
+    const systemInstruction = concise 
+      ? "You are a concise spiritual sage. Provide short, direct, and impactful answers in a few sentences."
+      : "You are a deep-thinking spiritual sage. Provide detailed philosophical insights with context from the Bhagavad Gita.";
+
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: query,
       config: {
+        systemInstruction,
         thinkingConfig: { thinkingBudget: 32768 }
       },
     });

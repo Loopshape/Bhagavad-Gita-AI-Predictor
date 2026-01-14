@@ -8,6 +8,7 @@ const SageChat: React.FC = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'thinking' | 'search'>('thinking');
+  const [isConcise, setIsConcise] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -23,7 +24,7 @@ const SageChat: React.FC = () => {
 
     try {
       if (mode === 'thinking') {
-        const reply = await chatWithThinking(input);
+        const reply = await chatWithThinking(input, isConcise);
         setMessages(prev => [...prev, { role: 'model', text: reply || 'The sage is silent...' }]);
       } else {
         const result = await searchGitaWisdom(input);
@@ -49,17 +50,28 @@ const SageChat: React.FC = () => {
 
   return (
     <div className="glass rounded-2xl flex flex-col h-[500px]">
-      <div className="p-4 border-b border-white/10 flex justify-between items-center">
+      <div className="p-4 border-b border-white/10 flex flex-wrap justify-between items-center gap-2">
         <h3 className="font-cinzel text-accent">Sage Consultation</h3>
-        <div className="flex gap-2 bg-black/20 p-1 rounded-lg">
-          <button 
-            onClick={() => setMode('thinking')}
-            className={`px-3 py-1 text-[10px] rounded ${mode === 'thinking' ? 'bg-accent text-black' : 'text-subtext'}`}
-          >Thinking</button>
-          <button 
-            onClick={() => setMode('search')}
-            className={`px-3 py-1 text-[10px] rounded ${mode === 'search' ? 'bg-accent text-black' : 'text-subtext'}`}
-          >Search</button>
+        <div className="flex gap-4 items-center">
+          <div className="flex gap-1 items-center">
+            <label className="text-[9px] uppercase tracking-tighter text-subtext">Concise</label>
+            <button 
+              onClick={() => setIsConcise(!isConcise)}
+              className={`w-8 h-4 rounded-full transition-colors relative ${isConcise ? 'bg-accent' : 'bg-white/10'}`}
+            >
+              <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${isConcise ? 'left-4.5' : 'left-0.5'}`} />
+            </button>
+          </div>
+          <div className="flex gap-1 bg-black/20 p-1 rounded-lg">
+            <button 
+              onClick={() => setMode('thinking')}
+              className={`px-3 py-1 text-[10px] rounded ${mode === 'thinking' ? 'bg-accent text-black' : 'text-subtext'}`}
+            >Thinking</button>
+            <button 
+              onClick={() => setMode('search')}
+              className={`px-3 py-1 text-[10px] rounded ${mode === 'search' ? 'bg-accent text-black' : 'text-subtext'}`}
+            >Search</button>
+          </div>
         </div>
       </div>
       

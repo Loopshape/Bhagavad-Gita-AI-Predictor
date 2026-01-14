@@ -43,10 +43,13 @@ const App: React.FC = () => {
     energyVector: 50,
     focusDimension: 'Material'
   });
+  const [history, setHistory] = useState<AlignmentState[]>([]);
   const [insight, setInsight] = useState<GitaInsight | null>(null);
   const [yearlyPlan, setYearlyPlan] = useState<YearlyDedication | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasKey, setHasKey] = useState<boolean>(false);
+  const [theme, setTheme] = useState<'gradient' | 'darker'>('gradient');
+  const [errorBanner, setErrorBanner] = useState<string | null>(null);
 
   useEffect(() => {
     const checkKey = async () => {
@@ -58,15 +61,21 @@ const App: React.FC = () => {
     checkKey();
   }, []);
 
+  useEffect(() => {
+    document.body.className = theme === 'gradient' ? 'gradient-bg min-h-screen' : 'darker-bg min-h-screen';
+  }, [theme]);
+
   const handleStart = async () => {
     if (tempProfile.name && tempProfile.birthDate) {
       setLoading(true);
+      setErrorBanner(null);
       try {
         const plan = await generateYearlyDedication(tempProfile);
         setYearlyPlan(plan);
         setProfile(tempProfile);
       } catch (e: any) {
         console.error(e);
+        setErrorBanner("Matrix initialization failed. Using standard protocols.");
         setProfile(tempProfile);
       } finally {
         setLoading(false);
@@ -84,6 +93,7 @@ const App: React.FC = () => {
   const fetchInsight = async () => {
     if (!profile) return;
     setLoading(true);
+    setErrorBanner(null);
     try {
       const result = await generateGitaInsight(profile.name, {
         emotionLevel: state.emotionLevel,
@@ -91,8 +101,9 @@ const App: React.FC = () => {
         dimension: state.focusDimension
       });
       setInsight(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      setErrorBanner("Failed to retrieve spiritual synthesis. Please verify connection.");
     } finally {
       setLoading(false);
     }
@@ -107,6 +118,26 @@ const App: React.FC = () => {
       navigator.clipboard.writeText(text);
       alert('Insight copied to clipboard!');
     }
+  };
+
+  const handleDecision = (impact: Partial<AlignmentState>) => {
+    setHistory(prev => [...prev, { ...state }]);
+    setState(prev => ({
+      ...prev,
+      emotionLevel: Math.max(-100, Math.min(100, prev.emotionLevel + (impact.emotionLevel || 0))),
+      energyVector: Math.max(0, Math.min(100, prev.energyVector + (impact.energyVector || 0)))
+    }));
+  };
+
+  const handleUndo = () => {
+    if (history.length === 0) return;
+    const lastState = history[history.length - 1];
+    setState(lastState);
+    setHistory(prev => prev.slice(0, -1));
+  };
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'gradient' ? 'darker' : 'gradient');
   };
 
   if (!profile) {
@@ -158,8 +189,22 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen p-4 md:p-8 max-w-[1600px] mx-auto space-y-8">
+      {errorBanner && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 glass border-rose-500/50 bg-rose-500/10 px-6 py-3 rounded-2xl flex items-center gap-4 animate-in slide-in-from-top duration-300">
+           <span className="text-rose-400 text-xs font-bold uppercase tracking-widest">{errorBanner}</span>
+           <button onClick={() => setErrorBanner(null)} className="text-white opacity-50 hover:opacity-100">✕</button>
+        </div>
+      )}
+
       {/* Header Grid Section */}
-      <header className="glass p-6 rounded-2xl grid grid-cols-24 gap-4 items-center border border-white/10">
+      <header className="glass p-6 rounded-2xl grid grid-cols-24 gap-4 items-center border border-white/10 relative">
+        <button 
+          onClick={toggleTheme}
+          className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] uppercase font-bold text-accent border border-white/10"
+        >
+          {theme === 'gradient' ? 'Dark Mode' : 'Gradient Mode'}
+        </button>
+        
         <div className="col-span-24 lg:col-span-12">
           <h2 className="font-cinzel text-3xl text-accent leading-tight">{profile.name}'s Alignment</h2>
           <p className="text-[10px] text-subtext uppercase tracking-[0.3em] font-semibold opacity-70">
@@ -167,20 +212,18 @@ const App: React.FC = () => {
           </p>
         </div>
         <div className="col-span-24 lg:col-span-12 flex flex-col lg:items-end gap-3">
-          <div className="flex gap-2 bg-black/40 p-1.5 rounded-xl border border-white/5">
-            {['Material', 'Spiritual', 'Digital', 'Social'].map(dim => (
-              <button
-                key={dim}
-                onClick={() => setState(s => ({ ...s, focusDimension: dim as any }))}
-                className={`px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${
-                  state.focusDimension === dim 
-                  ? 'bg-accent border-accent text-black shadow-[0_0_10px_rgba(245,158,11,0.4)]' 
-                  : 'bg-transparent border-transparent text-subtext hover:border-white/10 hover:text-white'
-                }`}
-              >
-                {dim}
-              </button>
-            ))}
+          <div className="flex gap-2 bg-black/40 p-1.5 rounded-xl border border-white/5 items-center">
+            <span className="text-[8px] uppercase font-black text-subtext mr-2 ml-1">Focus Dimension</span>
+            <select 
+              value={state.focusDimension}
+              onChange={(e) => setState(s => ({ ...s, focusDimension: e.target.value as any }))}
+              className="bg-transparent text-[10px] font-bold text-accent focus:outline-none cursor-pointer border border-accent/20 rounded px-2 py-1"
+            >
+              <option value="Material" className="bg-[#0a0a0c]">Material</option>
+              <option value="Spiritual" className="bg-[#0a0a0c]">Spiritual</option>
+              <option value="Digital" className="bg-[#0a0a0c]">Digital</option>
+              <option value="Social" className="bg-[#0a0a0c]">Social</option>
+            </select>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-[10px] text-subtext uppercase font-bold">Resonance Level: <span className="text-accent">{state.energyVector.toFixed(0)}%</span></span>
@@ -260,13 +303,12 @@ const App: React.FC = () => {
                   <div className="w-1.5 h-6 bg-accent/40 rounded-full"></div>
                   <h3 className="font-cinzel text-xl text-accent/80">Decision Nexus</h3>
               </div>
-              <DecisionNexus state={state} onDecision={impact => {
-                 setState(prev => ({
-                    ...prev,
-                    emotionLevel: Math.max(-100, Math.min(100, prev.emotionLevel + (impact.emotionLevel || 0))),
-                    energyVector: Math.max(0, Math.min(100, prev.energyVector + (impact.energyVector || 0)))
-                 }));
-              }} />
+              <DecisionNexus 
+                state={state} 
+                onDecision={handleDecision} 
+                onUndo={handleUndo} 
+                canUndo={history.length > 0} 
+              />
           </section>
 
           {yearlyPlan && <YearlyRoadmap plan={yearlyPlan} />}
