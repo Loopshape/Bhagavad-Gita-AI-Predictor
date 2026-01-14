@@ -22,6 +22,10 @@
             --md-sys-color-on-primary-container: #eaddff;
             --md-sys-color-secondary: #ccc2dc;
             --md-sys-color-on-secondary: #332d41;
+            --md-sys-color-tertiary: #efb8c8;
+            --md-sys-color-on-tertiary: #492532;
+            --md-sys-color-error: #f2b8b5;
+            --md-sys-color-on-error: #601410;
             --md-sys-color-surface: #1c1b1f;
             --md-sys-color-on-surface: #e6e1e5;
             --md-sys-color-surface-variant: #49454f;
@@ -77,6 +81,15 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
             vertical-align: middle;
+        }
+
+        .animate-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 

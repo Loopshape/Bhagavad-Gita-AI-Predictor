@@ -37,45 +37,90 @@ const DecisionNexus: React.FC<Props> = ({ state, onDecision, onUndo, canUndo }) 
     }
   ];
 
-  const getTypeStyle = (type: string) => {
+  // Map decision types to Material Design 3 semantic color tokens
+  const getMaterialStyle = (type: string) => {
     switch(type) {
-      case 'upgrade': return 'border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.1)]';
-      case 'downgrade': return 'border-rose-500/50 text-rose-400 hover:bg-rose-500/10 shadow-[0_0_15px_rgba(244,63,94,0.1)]';
-      default: return 'border-amber-500/50 text-amber-400 hover:bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.1)]';
+      case 'upgrade': return {
+        border: 'border-[var(--md-sys-color-primary)]',
+        glow: 'shadow-[0_0_20px_rgba(208,188,255,0.15)]',
+        chip: 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]'
+      };
+      case 'downgrade': return {
+        border: 'border-[var(--md-sys-color-error)]',
+        glow: 'shadow-[0_0_20px_rgba(242,184,181,0.15)]',
+        chip: 'bg-[var(--md-sys-color-error)]/20 text-[var(--md-sys-color-error)]'
+      };
+      default: return { // mixed
+        border: 'border-[var(--md-sys-color-tertiary)]',
+        glow: 'shadow-[0_0_20px_rgba(239,184,200,0.15)]',
+        chip: 'bg-[var(--md-sys-color-tertiary)]/20 text-[var(--md-sys-color-tertiary)]'
+      };
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {decisions.map((d, idx) => (
-          <button
-            key={idx}
-            onClick={() => onDecision(d.impact)}
-            className={`m3-card text-left border-2 transition-all duration-300 transform hover:scale-[1.03] active:scale-[0.98] group ${getTypeStyle(d.type)}`}
-          >
-            <div className="flex justify-between items-start mb-3">
-              <span className="font-cinzel text-sm font-bold tracking-tight group-hover:text-white transition-colors">{d.label}</span>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest ${
-                d.type === 'upgrade' ? 'bg-emerald-500/20' : 
-                d.type === 'downgrade' ? 'bg-rose-500/20' : 'bg-amber-500/20'
-              }`}>
-                {d.type}
-              </span>
-            </div>
-            <p className="text-[12px] text-slate-300 leading-relaxed group-hover:text-slate-100 transition-colors font-light">{d.desc}</p>
-          </button>
-        ))}
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {decisions.map((d, idx) => {
+          const style = getMaterialStyle(d.type);
+          return (
+            <button
+              key={idx}
+              onClick={() => onDecision(d.impact)}
+              className={`
+                relative flex flex-col text-left p-6 
+                bg-[#1c1b1f] rounded-[2rem] border-2 
+                ${style.border} ${style.glow}
+                transition-all duration-300 ease-out
+                hover:scale-[1.03] hover:-translate-y-1 hover:shadow-2xl
+                active:scale-[0.98] active:shadow-inner
+                group overflow-hidden
+              `}
+            >
+              {/* Material State Layer Effect */}
+              <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-[0.04] transition-opacity pointer-events-none" />
+              
+              <div className="flex justify-between items-start mb-4 relative z-10">
+                <span className="font-cinzel text-base font-bold tracking-tight text-white group-hover:text-accent transition-colors">
+                  {d.label}
+                </span>
+                <span className={`
+                  text-[9px] px-3 py-1 rounded-full font-black uppercase tracking-widest 
+                  border border-white/10 ${style.chip}
+                `}>
+                  {d.type}
+                </span>
+              </div>
+              
+              <p className="text-[13px] text-slate-400 leading-relaxed font-light group-hover:text-slate-100 transition-colors relative z-10">
+                {d.desc}
+              </p>
+
+              <div className="mt-4 flex justify-end opacity-0 group-hover:opacity-60 transition-opacity">
+                <span className="material-symbols-outlined text-sm">
+                  {d.type === 'upgrade' ? 'trending_up' : d.type === 'downgrade' ? 'trending_down' : 'sync'}
+                </span>
+              </div>
+            </button>
+          );
+        })}
       </div>
       
       {canUndo && (
-        <div className="flex justify-center mt-4">
+        <div className="flex justify-center mt-6">
           <button 
             onClick={onUndo}
-            className="flex items-center gap-2 px-6 py-2 bg-white/5 border border-white/20 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95 text-slate-300"
+            className="
+              flex items-center gap-3 px-8 py-3 
+              bg-white/5 border border-white/20 
+              rounded-full text-[11px] font-black uppercase tracking-[0.2em] 
+              hover:bg-white/10 hover:border-white/40 
+              transition-all duration-200 active:scale-90 
+              text-slate-300 hover:text-white shadow-xl
+            "
           >
-            <span className="material-symbols-outlined text-sm">undo</span>
-            Undo Last Decision
+            <span className="material-symbols-outlined text-base">undo</span>
+            Revert Last Decision
           </button>
         </div>
       )}
