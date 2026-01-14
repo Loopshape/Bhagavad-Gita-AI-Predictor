@@ -37,96 +37,66 @@ const DecisionNexus: React.FC<Props> = ({ state, onDecision, onUndo, canUndo }) 
     }
   ];
 
-  // Map decision types to Material Design 3 semantic color tokens with intensified hover glow
-  const getMaterialStyle = (type: string) => {
+  const getStyle = (type: string) => {
     switch(type) {
       case 'upgrade': return {
         border: 'border-[var(--md-sys-color-primary)]',
-        glow: 'shadow-[0_0_15px_rgba(208,188,255,0.1)]',
-        hoverGlow: 'hover:shadow-[0_0_35px_rgba(208,188,255,0.4)]',
-        chip: 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]'
+        glow: 'hover:shadow-[0_0_20px_rgba(208,188,255,0.4)]',
+        bg: 'bg-[var(--md-sys-color-primary-container)]/10'
       };
       case 'downgrade': return {
         border: 'border-[var(--md-sys-color-error)]',
-        glow: 'shadow-[0_0_15px_rgba(242,184,181,0.1)]',
-        hoverGlow: 'hover:shadow-[0_0_35px_rgba(242,184,181,0.4)]',
-        chip: 'bg-[var(--md-sys-color-error)]/20 text-[var(--md-sys-color-error)]'
+        glow: 'hover:shadow-[0_0_20px_rgba(242,184,181,0.4)]',
+        bg: 'bg-[var(--md-sys-color-error)]/10'
       };
       default: return { // mixed
         border: 'border-[var(--md-sys-color-tertiary)]',
-        glow: 'shadow-[0_0_15px_rgba(239,184,200,0.1)]',
-        hoverGlow: 'hover:shadow-[0_0_35px_rgba(239,184,200,0.4)]',
-        chip: 'bg-[var(--md-sys-color-tertiary)]/20 text-[var(--md-sys-color-tertiary)]'
+        glow: 'hover:shadow-[0_0_20px_rgba(239,184,200,0.4)]',
+        bg: 'bg-[var(--md-sys-color-tertiary-container)]/10'
       };
     }
   };
 
   return (
-    <div className="space-y-10">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="space-y-6 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {decisions.map((d, idx) => {
-          const style = getMaterialStyle(d.type);
+          const style = getStyle(d.type);
           return (
             <button
               key={idx}
               onClick={() => onDecision(d.impact)}
               className={`
-                relative flex flex-col text-left p-8 
-                bg-[#1c1b1f] rounded-[2.5rem] border-2 
-                ${style.border} ${style.glow} ${style.hoverGlow}
-                transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)
-                hover:scale-[1.04] hover:-translate-y-2
-                active:scale-[0.96] active:shadow-inner
-                group overflow-hidden
+                relative flex flex-col text-left p-6 
+                bg-[#1c1b1f] rounded-[2rem] border-2 transition-all duration-300
+                hover:scale-[1.03] active:scale-[0.98] group overflow-hidden
+                ${style.border} ${style.glow} ${style.bg}
               `}
             >
-              {/* Material State Layer Effect */}
-              <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-[0.06] transition-opacity duration-300 pointer-events-none" />
-              
-              <div className="flex justify-between items-start mb-6 relative z-10">
-                <span className="font-cinzel text-lg font-bold tracking-tight text-white group-hover:text-accent transition-colors duration-300">
+              <div className="flex justify-between items-start mb-2 relative z-10">
+                <span className="font-cinzel text-base font-bold tracking-tight text-white group-hover:text-accent">
                   {d.label}
                 </span>
-                <span className={`
-                  text-[10px] px-4 py-1.5 rounded-full font-black uppercase tracking-widest 
-                  border border-white/10 ${style.chip} shadow-sm
-                `}>
+                <span className={`text-[9px] px-3 py-1 rounded-full font-black uppercase tracking-widest bg-black/40 text-white/70 border border-white/10`}>
                   {d.type}
                 </span>
               </div>
-              
-              <p className="text-[14px] text-slate-400 leading-relaxed font-light group-hover:text-slate-100 transition-colors duration-300 relative z-10">
+              <p className="text-[13px] text-slate-300 leading-relaxed font-light group-hover:text-white transition-colors relative z-10">
                 {d.desc}
               </p>
-
-              <div className="mt-6 flex justify-end opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-2 group-hover:translate-y-0">
-                <div className="bg-white/5 p-2 rounded-full border border-white/10">
-                  <span className="material-symbols-outlined text-base text-accent">
-                    {d.type === 'upgrade' ? 'trending_up' : d.type === 'downgrade' ? 'trending_down' : 'sync'}
-                  </span>
-                </div>
-              </div>
             </button>
           );
         })}
       </div>
       
       {canUndo && (
-        <div className="flex justify-center mt-8">
+        <div className="flex justify-center pt-4">
           <button 
             onClick={onUndo}
-            className="
-              flex items-center gap-4 px-10 py-4 
-              bg-white/5 border border-white/10 
-              rounded-full text-[12px] font-black uppercase tracking-[0.3em] 
-              hover:bg-white/10 hover:border-white/30 
-              transition-all duration-300 active:scale-90 
-              text-slate-400 hover:text-white shadow-2xl
-              group
-            "
+            className="flex items-center gap-2 px-6 py-2 bg-white/5 border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-300 hover:bg-white/10 transition-all active:scale-95"
           >
-            <span className="material-symbols-outlined text-lg group-hover:-rotate-90 transition-transform">undo</span>
-            Revert Last Decision
+            <span className="material-symbols-outlined text-sm">undo</span>
+            Undo Last Decision
           </button>
         </div>
       )}
