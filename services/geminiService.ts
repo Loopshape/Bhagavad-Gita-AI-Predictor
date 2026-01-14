@@ -84,7 +84,7 @@ export const generateGitaInsight = async (
 
 export const generateReflectionPrompt = async (dimension: string, emotionLevel: number): Promise<string> => {
   return apiWrapper(async (ai) => {
-    const prompt = `Generate a profound self-reflection prompt for someone focusing on the ${dimension} dimension with an emotional valence of ${emotionLevel} (-100 to 100). Focus on Bhagavad Gita wisdom. Keep it to 2 sentences.`;
+    const prompt = `Generate a profound self-reflection prompt for someone focusing on the ${dimension} dimension with an emotional valence of ${emotionLevel} (-100 to 100). Focus on Bhagavad Gita wisdom. Keep it to 2 sentences. Return ONLY the prompt text.`;
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt
@@ -95,7 +95,7 @@ export const generateReflectionPrompt = async (dimension: string, emotionLevel: 
 
 export const getExpandedGitaDetails = async (verse: string, balancingAction: string): Promise<string> => {
   return apiWrapper(async (ai) => {
-    const prompt = `Provide a detailed spiritual and psychological expansion on this Gita wisdom: "${verse}" and its practical application: "${balancingAction}". Explain the "Why" and "How" in a modern context.`;
+    const prompt = `Provide a detailed spiritual and psychological expansion on this Gita wisdom: "${verse}" and its practical application: "${balancingAction}". Explain the "Why" and "How" in a modern context. Use about 100-150 words.`;
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt

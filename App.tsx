@@ -64,7 +64,7 @@ const YearlyRoadmap: React.FC<{ plan: YearlyDedication }> = ({ plan }) => {
                 {loadingDetails[idx] ? (
                   <div className="text-[10px] text-subtext italic animate-pulse">Expanding Gita wisdom...</div>
                 ) : (
-                  <div className="text-[11px] text-slate-400 leading-relaxed whitespace-pre-wrap">
+                  <div className="text-[12px] text-slate-400 leading-relaxed whitespace-pre-wrap bg-black/20 p-4 rounded-xl border border-white/5">
                     {details[idx]}
                   </div>
                 )}
@@ -81,36 +81,41 @@ const DecisionHistoryChart: React.FC<{ history: AlignmentState[], current: Align
   const data = [...history, current];
   if (data.length < 2) return null;
 
-  const maxPoints = 20;
+  const maxPoints = 12;
   const recentData = data.slice(-maxPoints);
 
   return (
-    <div className="glass p-4 rounded-2xl border border-white/5 space-y-3">
+    <div className="glass p-5 rounded-2xl border border-white/10 space-y-4 bg-black/20 overflow-hidden">
       <div className="flex justify-between items-center">
-        <h4 className="text-[10px] uppercase font-bold text-subtext tracking-widest">Impact Sequence</h4>
+        <div>
+          <h4 className="text-[10px] uppercase font-black text-accent tracking-[0.2em]">Decision Impact Timeline</h4>
+          <p className="text-[8px] text-subtext uppercase tracking-widest">Cumulative Resonance Data</p>
+        </div>
         <div className="flex gap-4">
-          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500"></div><span className="text-[8px] text-subtext">Emotion</span></div>
-          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500"></div><span className="text-[8px] text-subtext">Energy</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]"></div><span className="text-[9px] font-bold uppercase text-subtext">Emotion</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_5px_rgba(245,158,11,0.5)]"></div><span className="text-[9px] font-bold uppercase text-subtext">Energy</span></div>
         </div>
       </div>
-      <div className="h-16 flex items-end gap-1 px-1">
+      
+      <div className="space-y-2">
         {recentData.map((d, i) => (
-          <div key={i} className="flex-1 flex flex-col justify-end gap-0.5 group relative">
-            {/* Emotion Bar */}
-            <div 
-              className="w-full bg-emerald-500/30 group-hover:bg-emerald-500/50 transition-all rounded-t-sm"
-              style={{ height: `${(d.emotionLevel + 100) / 2}%` }}
-            />
-            {/* Energy Bar */}
-            <div 
-              className="w-full bg-amber-500/30 group-hover:bg-amber-500/50 transition-all rounded-t-sm"
-              style={{ height: `${d.energyVector}%` }}
-            />
-            
-            {/* Tooltip-ish */}
-            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block z-10">
-              <div className="glass p-2 rounded shadow-xl border border-white/10 text-[8px] whitespace-nowrap">
-                E: {d.emotionLevel.toFixed(0)} | V: {d.energyVector.toFixed(0)}
+          <div key={i} className="flex items-center gap-3 group">
+            <span className="text-[8px] font-black text-subtext w-4 text-center opacity-30 group-hover:opacity-100 transition-opacity">S{i+1}</span>
+            <div className="flex-1 h-3 flex gap-0.5 rounded-full overflow-hidden bg-white/5 border border-white/5 relative">
+              {/* Emotion horizontal bar */}
+              <div 
+                className="h-full bg-emerald-500/40 group-hover:bg-emerald-500/60 transition-all rounded-r"
+                style={{ width: `${(d.emotionLevel + 100) / 2}%` }}
+              />
+              {/* Energy horizontal bar overlay/next-to */}
+              <div 
+                className="h-full bg-amber-500/40 group-hover:bg-amber-500/60 transition-all rounded-r"
+                style={{ width: `${d.energyVector}%`, marginLeft: '2px' }}
+              />
+              
+              <div className="absolute inset-0 flex items-center justify-between px-2 pointer-events-none">
+                 <span className="text-[7px] font-bold text-white/40 uppercase">VAL: {d.emotionLevel.toFixed(0)}</span>
+                 <span className="text-[7px] font-bold text-white/40 uppercase">VEC: {d.energyVector.toFixed(0)}</span>
               </div>
             </div>
           </div>
@@ -285,7 +290,7 @@ const App: React.FC = () => {
       <header className="glass p-6 rounded-2xl grid grid-cols-24 gap-4 items-center border border-white/10 relative">
         <button 
           onClick={toggleTheme}
-          className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] uppercase font-bold text-accent border border-white/10"
+          className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] uppercase font-bold text-accent border border-white/10 transition-colors"
         >
           {theme === 'gradient' ? 'Dark Mode' : 'Gradient Mode'}
         </button>
@@ -293,16 +298,16 @@ const App: React.FC = () => {
         <div className="col-span-24 lg:col-span-12">
           <h2 className="font-cinzel text-3xl text-accent leading-tight">{profile.name}'s Alignment</h2>
           <p className="text-[10px] text-subtext uppercase tracking-[0.3em] font-semibold opacity-70">
-            System Protocol: Operational | Dynamic Matrix v1.0
+            System Protocol: Operational | Dynamic Matrix v2.5
           </p>
         </div>
         <div className="col-span-24 lg:col-span-12 flex flex-col lg:items-end gap-3">
-          <div className="flex gap-2 bg-black/40 p-1.5 rounded-xl border border-white/5 items-center">
-            <span className="text-[8px] uppercase font-black text-subtext mr-2 ml-1">Focus Dimension</span>
+          <div className="flex gap-2 bg-black/40 p-1.5 rounded-xl border border-white/5 items-center shadow-inner">
+            <span className="text-[8px] uppercase font-black text-subtext mr-2 ml-1 opacity-60">Focus Dimension</span>
             <select 
               value={state.focusDimension}
               onChange={(e) => setState(s => ({ ...s, focusDimension: e.target.value as any }))}
-              className="bg-transparent text-[10px] font-bold text-accent focus:outline-none cursor-pointer border border-accent/20 rounded px-2 py-1"
+              className="bg-transparent text-[10px] font-black uppercase text-accent focus:outline-none cursor-pointer border border-accent/20 rounded px-2 py-1 tracking-wider"
             >
               <option value="Material" className="bg-[#0a0a0c]">Material</option>
               <option value="Spiritual" className="bg-[#0a0a0c]">Spiritual</option>
@@ -311,9 +316,9 @@ const App: React.FC = () => {
             </select>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-[10px] text-subtext uppercase font-bold">Resonance Level: <span className="text-accent">{state.energyVector.toFixed(0)}%</span></span>
+            <span className="text-[10px] text-subtext uppercase font-black tracking-widest">Resonance: <span className="text-accent">{state.energyVector.toFixed(0)}%</span></span>
             {!hasKey && (
-               <button onClick={handleSelectKey} className="text-[10px] text-accent border border-accent/40 px-3 py-1 rounded-lg hover:bg-accent/5">Update API Key</button>
+               <button onClick={handleSelectKey} className="text-[10px] text-accent border border-accent/40 px-3 py-1 rounded-lg hover:bg-accent/10 transition-colors">Update Key</button>
             )}
           </div>
         </div>
@@ -333,52 +338,53 @@ const App: React.FC = () => {
           <section className="space-y-4">
              <div className="flex justify-between items-center border-b border-white/10 pb-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-8 bg-accent rounded-full"></div>
+                    <div className="w-1.5 h-8 bg-accent rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
                     <h3 className="font-cinzel text-2xl text-accent">Spiritual Synthesis</h3>
                 </div>
                 <div className="flex gap-3">
                   {insight && (
                     <button 
                       onClick={shareInsight} 
-                      className="text-[10px] font-bold border border-white/10 px-4 py-2 rounded-xl hover:bg-white/5 transition-all flex items-center gap-2 group"
+                      className="text-[10px] font-black uppercase border border-white/10 px-4 py-2 rounded-xl hover:bg-white/5 transition-all flex items-center gap-2 group"
                     >
-                      <span className="opacity-70 group-hover:opacity-100">Share Insight</span>
+                      <span className="opacity-70 group-hover:opacity-100">Share</span>
                     </button>
                   )}
                   <button 
                     onClick={fetchInsight}
                     disabled={loading}
-                    className={`text-[10px] font-bold border border-accent/30 px-6 py-2 rounded-xl transition-all shadow-sm ${
+                    className={`text-[10px] font-black uppercase border border-accent/30 px-6 py-2 rounded-xl transition-all shadow-lg ${
                         loading 
                         ? 'opacity-50 cursor-wait bg-accent/5' 
-                        : 'bg-accent/5 hover:bg-accent/20 hover:border-accent text-accent'
+                        : 'bg-accent/10 hover:bg-accent hover:text-black hover:border-accent text-accent'
                     }`}
                   >
-                    {loading ? 'Synthesizing...' : 'Seek Deeper Insight'}
+                    {loading ? 'Synthesizing...' : 'Seek Insight'}
                   </button>
                 </div>
              </div>
              
              {insight ? (
                <div className="glass p-8 rounded-3xl border border-accent/20 bg-gradient-to-br from-accent/5 to-transparent relative overflow-hidden animate-in slide-in-from-bottom duration-500">
-                  <div className="absolute top-0 right-0 p-4 opacity-5">
-                      <svg width="100" height="100" viewBox="0 0 100 100" fill="currentColor"><circle cx="50" cy="50" r="40" /></svg>
+                  <div className="absolute top-0 right-0 p-4 opacity-10">
+                      <svg width="120" height="120" viewBox="0 0 100 100" fill="currentColor" className="text-accent"><circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="0.5" fill="none" /></svg>
                   </div>
-                  <p className="italic text-xl font-cinzel text-center mb-8 leading-relaxed text-white">"{insight.verse}"</p>
-                  <div className="grid md:grid-cols-2 gap-6">
-                     <div className="p-5 bg-black/40 rounded-2xl border border-white/5 relative group hover:border-accent/30 transition-all">
-                        <span className="text-[9px] font-black text-accent uppercase block mb-2 tracking-widest">Deeper Insight</span>
+                  <p className="italic text-xl font-cinzel text-center mb-8 leading-relaxed text-white drop-shadow-sm">"{insight.verse}"</p>
+                  <div className="grid md:grid-cols-2 gap-6 relative z-10">
+                     <div className="p-6 bg-black/40 rounded-2xl border border-white/5 relative group hover:border-accent/30 transition-all shadow-inner">
+                        <span className="text-[9px] font-black text-accent uppercase block mb-3 tracking-[0.2em] opacity-80">Deeper Insight</span>
                         <p className="text-[13px] italic leading-relaxed text-slate-300">{insight.philosophicalStatement}</p>
                      </div>
-                     <div className="p-5 bg-black/40 rounded-2xl border border-white/5 relative group hover:border-accent/30 transition-all">
-                        <span className="text-[9px] font-black text-accent uppercase block mb-2 tracking-widest">Modern Framing</span>
+                     <div className="p-6 bg-black/40 rounded-2xl border border-white/5 relative group hover:border-accent/30 transition-all shadow-inner">
+                        <span className="text-[9px] font-black text-accent uppercase block mb-3 tracking-[0.2em] opacity-80">Modern Framing</span>
                         <p className="text-[13px] leading-relaxed text-slate-300">{insight.modernReframing}</p>
                      </div>
                   </div>
                </div>
              ) : (
-                <div className="glass p-12 rounded-3xl border border-dashed border-white/10 flex items-center justify-center opacity-40">
-                    <p className="text-xs italic tracking-widest uppercase">Select Focus Dimension and seek insight to begin</p>
+                <div className="glass p-12 rounded-3xl border border-dashed border-white/10 flex flex-col items-center justify-center opacity-40 space-y-3">
+                    <span className="text-2xl">🕉️</span>
+                    <p className="text-[10px] italic tracking-[0.3em] uppercase font-bold">Resonate with a Focus Dimension to begin Synthesis</p>
                 </div>
              )}
           </section>
@@ -386,7 +392,7 @@ const App: React.FC = () => {
           <section className="space-y-4">
               <div className="flex items-center gap-3">
                   <div className="w-1.5 h-6 bg-accent/40 rounded-full"></div>
-                  <h3 className="font-cinzel text-xl text-accent/80">Decision Nexus</h3>
+                  <h3 className="font-cinzel text-xl text-accent/80 tracking-widest">Decision Nexus</h3>
               </div>
               
               <DecisionHistoryChart history={history} current={state} />
@@ -405,9 +411,9 @@ const App: React.FC = () => {
         </div>
       </div>
       
-      <footer className="py-8 border-t border-white/10 flex justify-between items-center text-[9px] text-subtext uppercase tracking-widest font-semibold opacity-60">
-        <div>Proprietary Spiritual Alignment Engine v2.4</div>
-        <div>Based on Bhagavad-Gita "As It Is" | AI System Protocol 0x43F</div>
+      <footer className="py-12 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-[9px] text-subtext uppercase tracking-[0.4em] font-black opacity-40">
+        <div>Proprietary Spiritual Alignment Engine v2.5</div>
+        <div className="mt-4 md:mt-0">Bhagavad-Gita "As It Is" Protocol | AI System 0x43F</div>
       </footer>
     </div>
   );

@@ -54,10 +54,11 @@ const SageChat: React.FC<Props> = ({ focusDimension, emotionLevel }) => {
   };
 
   const handleReflection = async () => {
+    if (loading) return;
     setLoading(true);
     try {
-      const prompt = await generateReflectionPrompt(focusDimension, emotionLevel);
-      setMessages(prev => [...prev, { role: 'model', text: `✨ Self-Reflection Prompt: ${prompt}` }]);
+      const promptText = await generateReflectionPrompt(focusDimension, emotionLevel);
+      setMessages(prev => [...prev, { role: 'model', text: `✨ Self-Reflection Guidance:\n\n${promptText}` }]);
     } catch (e) {
        setMessages(prev => [...prev, { role: 'model', text: "The inner eye is clouded. Try again later." }]);
     } finally {
@@ -66,51 +67,58 @@ const SageChat: React.FC<Props> = ({ focusDimension, emotionLevel }) => {
   };
 
   return (
-    <div className="glass rounded-2xl flex flex-col h-[500px]">
-      <div className="p-4 border-b border-white/10 flex flex-wrap justify-between items-center gap-2">
-        <h3 className="font-cinzel text-accent">Sage Consultation</h3>
+    <div className="glass rounded-2xl flex flex-col h-[500px] border border-white/10 overflow-hidden">
+      <div className="p-4 border-b border-white/10 flex flex-wrap justify-between items-center gap-3 bg-black/20">
+        <h3 className="font-cinzel text-accent text-sm tracking-widest">Sage Consultation</h3>
         <div className="flex gap-4 items-center">
           <button 
             onClick={handleReflection}
-            className="text-[9px] uppercase font-bold text-accent border border-accent/30 px-3 py-1 rounded hover:bg-accent/10 transition-all"
+            disabled={loading}
+            className="text-[9px] uppercase font-black text-accent border border-accent/40 px-3 py-1.5 rounded-lg hover:bg-accent/20 transition-all flex items-center gap-1.5 shadow-sm"
           >
-            Reflect
+            <span className="text-[11px]">✨</span> Reflection
           </button>
-          <div className="flex gap-1 items-center">
-            <label className="text-[9px] uppercase tracking-tighter text-subtext">Concise</label>
+          <div className="flex gap-2 items-center">
+            <label className="text-[8px] uppercase font-black tracking-widest text-subtext">Concise</label>
             <button 
               onClick={() => setIsConcise(!isConcise)}
-              className={`w-8 h-4 rounded-full transition-colors relative ${isConcise ? 'bg-accent' : 'bg-white/10'}`}
+              className={`w-8 h-4 rounded-full transition-all relative ${isConcise ? 'bg-accent' : 'bg-white/10'}`}
             >
-              <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${isConcise ? 'left-4.5' : 'left-0.5'}`} />
+              <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all ${isConcise ? 'left-[18px]' : 'left-0.5'}`} />
             </button>
           </div>
-          <div className="flex gap-1 bg-black/20 p-1 rounded-lg">
+          <div className="flex gap-1 bg-black/40 p-1 rounded-lg border border-white/5">
             <button 
               onClick={() => setMode('thinking')}
-              className={`px-3 py-1 text-[10px] rounded ${mode === 'thinking' ? 'bg-accent text-black' : 'text-subtext'}`}
-            >Thinking</button>
+              className={`px-3 py-1 text-[9px] font-black uppercase rounded-md transition-all ${mode === 'thinking' ? 'bg-accent text-black shadow-lg' : 'text-subtext hover:text-white'}`}
+            >Logic</button>
             <button 
               onClick={() => setMode('search')}
-              className={`px-3 py-1 text-[10px] rounded ${mode === 'search' ? 'bg-accent text-black' : 'text-subtext'}`}
+              className={`px-3 py-1 text-[9px] font-black uppercase rounded-md transition-all ${mode === 'search' ? 'bg-accent text-black shadow-lg' : 'text-subtext hover:text-white'}`}
             >Search</button>
           </div>
         </div>
       </div>
       
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
+        {messages.length === 0 && (
+          <div className="h-full flex flex-col items-center justify-center opacity-20 space-y-2">
+            <div className="text-3xl">🕉️</div>
+            <p className="text-[10px] uppercase tracking-widest">Inquire about your current alignment</p>
+          </div>
+        )}
         {messages.map((m, i) => (
-          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] p-3 rounded-xl text-xs leading-relaxed ${
-              m.role === 'user' ? 'bg-accent/20 border border-accent/30' : 'bg-white/5 border border-white/10'
+          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+            <div className={`max-w-[85%] p-4 rounded-2xl text-[13px] leading-relaxed shadow-sm ${
+              m.role === 'user' ? 'bg-accent/10 border border-accent/30 text-accent-100' : 'bg-white/5 border border-white/10 text-slate-200'
             }`}>
-              {m.text}
+              <div className="whitespace-pre-wrap">{m.text}</div>
               {m.sources && m.sources.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-white/10">
-                  <span className="text-[8px] uppercase text-accent opacity-50 block mb-1">Sources</span>
+                <div className="mt-3 pt-3 border-t border-white/10">
+                  <span className="text-[8px] uppercase font-bold text-accent opacity-50 block mb-2">Knowledge Sources</span>
                   {m.sources.map((s, si) => (
-                    <a key={si} href={s.uri} target="_blank" rel="noreferrer" className="block text-accent hover:underline overflow-hidden text-ellipsis whitespace-nowrap">
-                      {s.title}
+                    <a key={si} href={s.uri} target="_blank" rel="noreferrer" className="block text-accent hover:underline text-[11px] mb-1">
+                      → {s.title}
                     </a>
                   ))}
                 </div>
@@ -118,28 +126,36 @@ const SageChat: React.FC<Props> = ({ focusDimension, emotionLevel }) => {
               {m.role === 'model' && (
                 <button 
                   onClick={() => playAudio(m.text)}
-                  className="mt-2 text-accent opacity-50 hover:opacity-100 flex items-center gap-1"
+                  className="mt-3 text-accent/60 hover:text-accent flex items-center gap-1.5 transition-colors"
                 >
-                  <span className="text-[10px]">Play Audio</span>
+                  <span className="text-sm">🔊</span> <span className="text-[9px] font-bold uppercase tracking-widest">Speak Wisdom</span>
                 </button>
               )}
             </div>
           </div>
         ))}
-        {loading && <div className="text-xs text-subtext italic">The sage is contemplating...</div>}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="bg-white/5 border border-white/10 p-3 rounded-2xl flex gap-1 items-center animate-pulse">
+              <div className="w-1 h-1 bg-accent rounded-full"></div>
+              <div className="w-1 h-1 bg-accent rounded-full"></div>
+              <div className="w-1 h-1 bg-accent rounded-full"></div>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="p-4 border-t border-white/10 flex gap-2">
+      <div className="p-4 border-t border-white/10 flex gap-2 bg-black/20">
         <input 
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSend()}
           placeholder="Ask the Gita Sage..."
-          className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-accent"
+          className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-accent/50 transition-colors"
         />
         <button 
           onClick={handleSend}
-          className="bg-accent hover:bg-orange-500 text-black px-4 rounded-xl text-xs font-bold"
+          className="bg-accent hover:bg-orange-500 text-black px-6 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95"
         >Send</button>
       </div>
     </div>
