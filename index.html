@@ -32,8 +32,6 @@
 
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: var(--md-sys-color-surface);
-            color: var(--md-sys-color-on-surface);
             transition: background-color 0.5s ease, color 0.5s ease;
             margin: 0;
             overflow-x: hidden;
@@ -45,10 +43,12 @@
 
         .gradient-bg {
             background: radial-gradient(circle at center, #1a1a2e 0%, #0a0a0c 100%);
+            color: #e2e8f0;
         }
 
         .darker-bg {
             background-color: #050505;
+            color: #cbd5e1;
         }
 
         /* Material Elevation / Card Styles */
@@ -57,11 +57,7 @@
             border-radius: 1.5rem; /* 24px */
             padding: 1.5rem;
             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-            transition: box-shadow 0.2s ease-in-out;
-        }
-
-        .m3-card:hover {
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
         }
 
         .grid-24 {

@@ -36,9 +36,9 @@ const YearlyRoadmap: React.FC<{ plan: YearlyDedication }> = ({ plan }) => {
 
   return (
     <div className="space-y-6">
-      <div className="m3-card bg-gradient-to-br from-primary-container to-surface border border-white/5 relative overflow-hidden">
-        <h3 className="font-cinzel text-2xl text-accent mb-4">Yearly Dedication Workflow</h3>
-        <p className="text-sm text-subtext leading-relaxed mb-6 font-light">{plan.introduction}</p>
+      <div className="m3-card bg-gradient-to-br from-[#4f378b] to-surface border border-white/5 relative overflow-hidden shadow-2xl">
+        <h3 className="font-cinzel text-2xl text-accent mb-4 tracking-tight">Yearly Dedication Workflow</h3>
+        <p className="text-sm text-slate-300 leading-relaxed mb-6 font-light">{plan.introduction}</p>
         <div className="bg-black/40 p-5 rounded-2xl border border-accent/20 italic text-accent text-sm shadow-xl flex items-center gap-4">
           <span className="material-symbols-outlined text-3xl opacity-50">om</span>
           <span>"Core Lesson: {plan.coreSpiritualLesson}"</span>
@@ -50,7 +50,7 @@ const YearlyRoadmap: React.FC<{ plan: YearlyDedication }> = ({ plan }) => {
           <div 
             key={idx} 
             onClick={() => handleToggle(idx)}
-            className={`m3-card border-l-8 border-accent transition-all duration-300 cursor-pointer group ${expandedIdx === idx ? 'md:col-span-2 bg-black/40' : 'hover:-translate-y-1'}`}
+            className={`m3-card border-l-8 border-accent transition-all duration-300 cursor-pointer group hover:bg-black/20 ${expandedIdx === idx ? 'md:col-span-2 bg-black/40 shadow-inner' : ''}`}
           >
             <div className="flex justify-between items-center mb-4">
               <span className="text-[11px] font-black uppercase text-subtext group-hover:text-accent transition-colors tracking-[0.2em]">{q.quarter}</span>
@@ -64,7 +64,7 @@ const YearlyRoadmap: React.FC<{ plan: YearlyDedication }> = ({ plan }) => {
               <div className="mt-6 pt-6 border-t border-white/10 animate-in fade-in slide-in-from-top-4 duration-500">
                 {loadingDetails[idx] ? (
                   <div className="text-[11px] text-subtext italic animate-pulse flex items-center gap-3">
-                    <md-circular-progress indeterminate density="-3"></md-circular-progress> 
+                    <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
                     Expanding neural Gita wisdom...
                   </div>
                 ) : (
@@ -97,7 +97,7 @@ const DecisionHistoryTimeline: React.FC<{ history: AlignmentState[], current: Al
         </div>
         <div className="flex gap-6">
           <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]"></div><span className="text-[10px] font-black uppercase text-subtext tracking-widest">Emotion</span></div>
-          <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.7)]"></div><span className="text-[10px] font-black uppercase text-subtext tracking-widest">Energy</span></div>
+          <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.7)]"></div><span className="text-[10px] font-black uppercase text-subtext tracking-widest">Energy</span></div>
         </div>
       </div>
       
@@ -144,8 +144,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const checkKey = async () => {
-      if (window.aistudio?.hasSelectedApiKey) {
-        const selected = await window.aistudio.hasSelectedApiKey();
+      if ((window as any).aistudio?.hasSelectedApiKey) {
+        const selected = await (window as any).aistudio.hasSelectedApiKey();
         setHasKey(selected);
       }
     };
@@ -165,7 +165,7 @@ const App: React.FC = () => {
         setYearlyPlan(plan);
         setProfile(tempProfile);
       } catch (e: any) {
-        setErrorBanner("Matrix initialization failure. Please check API credentials.");
+        setErrorBanner("Neural roadmap synthesis failed. Ensure API access is valid.");
         console.error(e);
       } finally {
         setLoading(false);
@@ -174,8 +174,8 @@ const App: React.FC = () => {
   };
 
   const handleSelectKey = async () => {
-    if (window.aistudio?.openSelectKey) {
-      await window.aistudio.openSelectKey();
+    if ((window as any).aistudio?.openSelectKey) {
+      await (window as any).aistudio.openSelectKey();
       setHasKey(true);
     }
   };
@@ -192,7 +192,7 @@ const App: React.FC = () => {
       });
       setInsight(result);
     } catch (error: any) {
-      setErrorBanner("Dynamic synthesis failed. Ensure API access is established.");
+      setErrorBanner("Dynamic synthesis failed. Check connection or API project limits.");
       console.error(error);
     } finally {
       setLoading(false);
@@ -206,7 +206,7 @@ const App: React.FC = () => {
       navigator.share({ title: 'Gita Neural Alignment', text });
     } else {
       navigator.clipboard.writeText(text);
-      setErrorBanner("Insight copied to clipboard.");
+      setErrorBanner("Wisdom sequence copied to local buffer.");
       setTimeout(() => setErrorBanner(null), 3000);
     }
   };
@@ -234,7 +234,7 @@ const App: React.FC = () => {
   if (!profile) {
     return (
       <div className="min-h-screen flex items-center justify-center p-8">
-        <div className="m3-card max-w-lg w-full p-10 text-center shadow-2xl bg-black/60 border border-white/5">
+        <div className="m3-card max-w-lg w-full p-10 text-center shadow-2xl bg-black/60 border border-white/5 scale-in">
           <h1 className="font-cinzel text-5xl mb-4 text-accent tracking-tighter">Gita Alignment</h1>
           <p className="text-subtext mb-10 text-xs tracking-[0.3em] font-black uppercase opacity-60 italic">Initialize Temporal Roadmap</p>
           <div className="space-y-6 text-left">
@@ -261,17 +261,24 @@ const App: React.FC = () => {
             {!hasKey && (
               <div className="p-6 bg-accent/15 border border-accent/30 rounded-2xl text-[12px] text-accent text-left mb-4 shadow-inner">
                 <p className="font-black uppercase tracking-widest mb-2">System Sequence Required</p>
-                <p className="opacity-80 font-light">Advanced spiritual synthesis requires an established API sequence. Establish your key via the Google Cloud platform.</p>
-                <md-text-button onClick={handleSelectKey} style={{ '--md-text-button-label-text-color': '#f59e0b' }}>
+                <p className="opacity-80 font-light text-slate-300">Advanced spiritual synthesis requires an established API sequence. Establish your key via the Google Cloud platform.</p>
+                <button 
+                  onClick={handleSelectKey} 
+                  className="mt-4 text-sm font-black uppercase tracking-widest text-accent hover:underline"
+                >
                   Establish Key Sequence
-                </md-text-button>
+                </button>
               </div>
             )}
 
             <div className="pt-4">
-              <md-filled-button onClick={handleStart} style={{ width: '100%', '--md-filled-button-container-color': '#f59e0b', '--md-filled-button-label-text-color': '#000' }} disabled={loading}>
-                {loading ? 'Synthesizing Roadmap...' : 'Initiate Alignment'}
-              </md-filled-button>
+              <button 
+                onClick={handleStart} 
+                disabled={loading}
+                className="w-full bg-accent hover:bg-orange-500 text-black font-black uppercase tracking-widest py-4 rounded-2xl shadow-xl transition-all active:scale-95 disabled:opacity-50"
+              >
+                {loading ? 'Synthesizing...' : 'Initiate Alignment'}
+              </button>
             </div>
           </div>
         </div>
@@ -285,16 +292,21 @@ const App: React.FC = () => {
         <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[100] m3-card bg-rose-900/40 border-rose-500/50 px-8 py-4 flex items-center gap-6 animate-in slide-in-from-top duration-300 shadow-2xl">
            <span className="material-symbols-outlined text-rose-400">error</span>
            <span className="text-rose-400 text-[11px] font-black uppercase tracking-[0.2em]">{errorBanner}</span>
-           <md-icon-button onClick={() => setErrorBanner(null)}><span className="material-symbols-outlined">close</span></md-icon-button>
+           <button onClick={() => setErrorBanner(null)} className="p-1 hover:bg-white/10 rounded-full transition-colors">
+              <span className="material-symbols-outlined">close</span>
+           </button>
         </div>
       )}
 
       {/* Header Grid Section */}
       <header className="m3-card grid grid-cols-24 gap-6 items-center border border-white/10 relative shadow-2xl bg-black/60">
         <div className="absolute top-6 right-8">
-          <md-outlined-icon-button onClick={toggleTheme}>
+          <button 
+            onClick={toggleTheme}
+            className="p-3 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all active:scale-90 text-accent"
+          >
             <span className="material-symbols-outlined">{theme === 'gradient' ? 'dark_mode' : 'light_mode'}</span>
-          </md-outlined-icon-button>
+          </button>
         </div>
         
         <div className="col-span-24 lg:col-span-14">
@@ -306,17 +318,21 @@ const App: React.FC = () => {
         <div className="col-span-24 lg:col-span-10 flex flex-col lg:items-end gap-4">
           <div className="flex gap-4 items-center bg-black/40 p-3 rounded-2xl border border-white/5">
              <span className="text-[9px] uppercase font-black text-subtext tracking-widest opacity-50">Active Dimension</span>
-             <md-filled-select value={state.focusDimension} onInput={(e: any) => setState(s => ({ ...s, focusDimension: e.target.value as any }))} style={{ '--md-filled-select-container-color': 'transparent', '--md-filled-select-text-color': '#f59e0b' }}>
-                <md-select-option value="Material">Material</md-select-option>
-                <md-select-option value="Spiritual">Spiritual</md-select-option>
-                <md-select-option value="Digital">Digital</md-select-option>
-                <md-select-option value="Social">Social</md-select-option>
-             </md-filled-select>
+             <select 
+               value={state.focusDimension} 
+               onChange={(e: any) => setState(s => ({ ...s, focusDimension: e.target.value as any }))}
+               className="bg-transparent text-[11px] font-black uppercase text-accent focus:outline-none cursor-pointer border border-accent/20 rounded-lg px-3 py-1.5 tracking-wider transition-all hover:bg-white/5"
+             >
+                <option value="Material" className="bg-[#1c1b1f]">Material</option>
+                <option value="Spiritual" className="bg-[#1c1b1f]">Spiritual</option>
+                <option value="Digital" className="bg-[#1c1b1f]">Digital</option>
+                <option value="Social" className="bg-[#1c1b1f]">Social</option>
+             </select>
           </div>
           <div className="flex items-center gap-6">
             <span className="text-[11px] text-subtext uppercase font-black tracking-[0.3em]">Resonance Frequency: <span className="text-accent ml-1">{state.energyVector.toFixed(0)}%</span></span>
             {!hasKey && (
-               <md-outlined-button onClick={handleSelectKey}>Authorize</md-outlined-button>
+               <button onClick={handleSelectKey} className="text-[11px] text-accent border border-accent/40 px-4 py-1.5 rounded-full hover:bg-accent/10 transition-all font-black uppercase tracking-widest">Authorize</button>
             )}
           </div>
         </div>
@@ -344,13 +360,17 @@ const App: React.FC = () => {
                 </div>
                 <div className="flex gap-4">
                   {insight && (
-                    <md-icon-button onClick={shareInsight}>
+                    <button onClick={shareInsight} className="p-3 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-all active:scale-95 text-slate-300">
                       <span className="material-symbols-outlined">share</span>
-                    </md-icon-button>
+                    </button>
                   )}
-                  <md-filled-tonal-button onClick={fetchInsight} disabled={loading} style={{ '--md-filled-tonal-button-container-color': 'rgba(245,158,11,0.1)', '--md-filled-tonal-button-label-text-color': '#f59e0b' }}>
+                  <button 
+                    onClick={fetchInsight} 
+                    disabled={loading}
+                    className="bg-accent/10 hover:bg-accent hover:text-black border border-accent/40 text-accent px-6 py-2.5 rounded-full font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-50"
+                  >
                     {loading ? 'Synthesizing...' : 'Seek Insight Sequence'}
-                  </md-filled-tonal-button>
+                  </button>
                 </div>
              </div>
              

@@ -74,19 +74,34 @@ const SageChat: React.FC<Props> = ({ focusDimension, emotionLevel }) => {
             <h3 className="font-cinzel text-accent text-sm tracking-widest">Sage Consultation</h3>
         </div>
         <div className="flex gap-6 items-center">
-          <md-outlined-button onClick={handleReflection} disabled={loading} style={{ '--md-outlined-button-outline-color': 'rgba(245,158,11,0.3)', '--md-outlined-button-label-text-color': '#f59e0b' }}>
-            <span slot="icon" className="material-symbols-outlined">psychology</span>
+          <button 
+            onClick={handleReflection} 
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-1.5 border border-accent/40 rounded-full text-[10px] font-bold uppercase tracking-widest text-accent hover:bg-accent/10 transition-all active:scale-95"
+          >
+            <span className="material-symbols-outlined text-sm">psychology</span>
             Reflect
-          </md-outlined-button>
+          </button>
           
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-3 items-center">
             <label className="text-[10px] uppercase font-black tracking-widest text-subtext opacity-70">Concise</label>
-            <md-switch selected={isConcise} onInput={() => setIsConcise(!isConcise)} style={{ '--md-switch-selected-handle-color': '#f59e0b', '--md-switch-selected-track-color': 'rgba(245,158,11,0.3)' }}></md-switch>
+            <div 
+              onClick={() => setIsConcise(!isConcise)}
+              className={`w-10 h-5 rounded-full cursor-pointer transition-all relative ${isConcise ? 'bg-accent' : 'bg-white/10'}`}
+            >
+              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-md transition-all ${isConcise ? 'left-[22px]' : 'left-0.5'}`} />
+            </div>
           </div>
 
-          <div className="flex gap-2 bg-black/80 p-1.5 rounded-2xl border border-white/10">
-            <md-filled-tonal-button onClick={() => setMode('thinking')} disabled={mode === 'thinking'} style={{ '--md-filled-tonal-button-container-color': mode === 'thinking' ? '#f59e0b' : 'transparent', '--md-filled-tonal-button-label-text-color': mode === 'thinking' ? '#000' : '#94a3b8' }}>Logic</md-filled-tonal-button>
-            <md-filled-tonal-button onClick={() => setMode('search')} disabled={mode === 'search'} style={{ '--md-filled-tonal-button-container-color': mode === 'search' ? '#f59e0b' : 'transparent', '--md-filled-tonal-button-label-text-color': mode === 'search' ? '#000' : '#94a3b8' }}>Search</md-filled-tonal-button>
+          <div className="flex gap-2 bg-black/80 p-1 rounded-xl border border-white/10">
+            <button 
+              onClick={() => setMode('thinking')} 
+              className={`px-4 py-1 text-[10px] font-black uppercase rounded-lg transition-all ${mode === 'thinking' ? 'bg-accent text-black' : 'text-subtext hover:text-white'}`}
+            >Logic</button>
+            <button 
+              onClick={() => setMode('search')} 
+              className={`px-4 py-1 text-[10px] font-black uppercase rounded-lg transition-all ${mode === 'search' ? 'bg-accent text-black' : 'text-subtext hover:text-white'}`}
+            >Search</button>
           </div>
         </div>
       </div>
@@ -101,7 +116,7 @@ const SageChat: React.FC<Props> = ({ focusDimension, emotionLevel }) => {
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-400`}>
             <div className={`max-w-[85%] p-5 rounded-3xl text-[14px] leading-relaxed shadow-lg ${
-              m.role === 'user' ? 'bg-primary-container text-on-primary-container border border-white/10' : 'bg-surface-variant text-on-surface-variant border border-white/5'
+              m.role === 'user' ? 'bg-[#4f378b] text-[#eaddff] border border-white/10' : 'bg-[#49454f] text-[#cac4d0] border border-white/5'
             }`}>
               <div className="whitespace-pre-wrap font-light">{m.text}</div>
               {m.sources && m.sources.length > 0 && (
@@ -115,11 +130,14 @@ const SageChat: React.FC<Props> = ({ focusDimension, emotionLevel }) => {
                 </div>
               )}
               {m.role === 'model' && (
-                <div className="mt-4 flex gap-2">
-                   <md-icon-button onClick={() => playAudio(m.text)} style={{ '--md-icon-button-icon-color': '#f59e0b' }}>
+                <div className="mt-4 flex items-center gap-2">
+                   <button 
+                    onClick={() => playAudio(m.text)}
+                    className="p-2 rounded-full hover:bg-white/10 text-accent transition-colors"
+                   >
                       <span className="material-symbols-outlined">volume_up</span>
-                   </md-icon-button>
-                   <span className="text-[10px] font-black uppercase tracking-widest self-center opacity-50">Resonate Voice</span>
+                   </button>
+                   <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Resonate Voice</span>
                 </div>
               )}
             </div>
@@ -127,24 +145,29 @@ const SageChat: React.FC<Props> = ({ focusDimension, emotionLevel }) => {
         ))}
         {loading && (
           <div className="flex justify-start">
-             <md-circular-progress indeterminate density="-1"></md-circular-progress>
+             <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
       </div>
 
       <div className="p-6 border-t border-white/10 flex gap-4 bg-black/60 items-end">
-        <md-outlined-text-field 
-          label="Inquire to the Sage" 
-          placeholder="Transmit your query..." 
-          value={input} 
-          onInput={(e: any) => setInput(e.target.value)} 
-          onKeyDown={(e: any) => e.key === 'Enter' && handleSend()}
-          style={{ flex: 1, '--md-outlined-text-field-container-shape': '1rem' }}
-        ></md-outlined-text-field>
-        <md-filled-button onClick={handleSend} disabled={loading} style={{ '--md-filled-button-container-color': '#f59e0b', '--md-filled-button-label-text-color': '#000', height: '56px', borderRadius: '1rem' }}>
-           Send
-           <span slot="icon" className="material-symbols-outlined">send</span>
-        </md-filled-button>
+        <div className="flex-1 relative">
+          <input 
+            placeholder="Transmit your query to the Sage..." 
+            value={input} 
+            onChange={(e) => setInput(e.target.value)} 
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            className="w-full bg-white/5 border border-white/20 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-accent transition-all text-white"
+          />
+        </div>
+        <button 
+          onClick={handleSend} 
+          disabled={loading}
+          className="flex items-center gap-2 bg-accent hover:bg-orange-500 text-black px-8 py-4 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-50"
+        >
+          Send
+          <span className="material-symbols-outlined text-sm">send</span>
+        </button>
       </div>
     </div>
   );

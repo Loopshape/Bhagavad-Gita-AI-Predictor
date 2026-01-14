@@ -39,9 +39,9 @@ const DecisionNexus: React.FC<Props> = ({ state, onDecision, onUndo, canUndo }) 
 
   const getTypeStyle = (type: string) => {
     switch(type) {
-      case 'upgrade': return 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10';
-      case 'downgrade': return 'border-rose-500/30 text-rose-400 hover:bg-rose-500/10';
-      default: return 'border-amber-500/30 text-amber-400 hover:bg-amber-500/10';
+      case 'upgrade': return 'border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.1)]';
+      case 'downgrade': return 'border-rose-500/50 text-rose-400 hover:bg-rose-500/10 shadow-[0_0_15px_rgba(244,63,94,0.1)]';
+      default: return 'border-amber-500/50 text-amber-400 hover:bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.1)]';
     }
   };
 
@@ -52,10 +52,10 @@ const DecisionNexus: React.FC<Props> = ({ state, onDecision, onUndo, canUndo }) 
           <button
             key={idx}
             onClick={() => onDecision(d.impact)}
-            className={`m3-card text-left border transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] group ${getTypeStyle(d.type)}`}
+            className={`m3-card text-left border-2 transition-all duration-300 transform hover:scale-[1.03] active:scale-[0.98] group ${getTypeStyle(d.type)}`}
           >
             <div className="flex justify-between items-start mb-3">
-              <span className="font-cinzel text-sm font-bold tracking-tight group-hover:text-white">{d.label}</span>
+              <span className="font-cinzel text-sm font-bold tracking-tight group-hover:text-white transition-colors">{d.label}</span>
               <span className={`text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest ${
                 d.type === 'upgrade' ? 'bg-emerald-500/20' : 
                 d.type === 'downgrade' ? 'bg-rose-500/20' : 'bg-amber-500/20'
@@ -63,17 +63,20 @@ const DecisionNexus: React.FC<Props> = ({ state, onDecision, onUndo, canUndo }) 
                 {d.type}
               </span>
             </div>
-            <p className="text-[12px] text-slate-400 leading-relaxed group-hover:text-slate-200 transition-colors font-light">{d.desc}</p>
+            <p className="text-[12px] text-slate-300 leading-relaxed group-hover:text-slate-100 transition-colors font-light">{d.desc}</p>
           </button>
         ))}
       </div>
       
       {canUndo && (
-        <div className="flex justify-center">
-          <md-outlined-button onClick={onUndo} style={{ '--md-outlined-button-outline-color': 'rgba(255,255,255,0.2)' }}>
-            <span slot="icon" className="material-symbols-outlined">undo</span>
+        <div className="flex justify-center mt-4">
+          <button 
+            onClick={onUndo}
+            className="flex items-center gap-2 px-6 py-2 bg-white/5 border border-white/20 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95 text-slate-300"
+          >
+            <span className="material-symbols-outlined text-sm">undo</span>
             Undo Last Decision
-          </md-outlined-button>
+          </button>
         </div>
       )}
     </div>
