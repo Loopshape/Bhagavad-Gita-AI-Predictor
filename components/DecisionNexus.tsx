@@ -63,7 +63,7 @@ const DecisionNexus: React.FC<Props> = ({ state, onUndo, onDecision, canUndo }) 
               onClick={() => onDecision(d.impact)}
               className={`
                 m3-elevated-button flex flex-col text-left p-10 
-                ${getGlowClass(d.type)} w-full bg-black/40 group
+                ${getGlowClass(d.type)} w-full bg-black/40 group rounded-[2.5rem]
               `}
             >
               <div className="flex justify-between items-center mb-8 w-full">
