@@ -1,7 +1,6 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage } from '../types';
-import { chatWithThinking, searchGitaWisdom, generateSpeech, decode, decodeAudioData, generateReflectionPrompt } from '../services/geminiService';
+import { chatWithThinking, searchGitaWisdom, generateSpeech, decode, decodeAudioData } from '../services/geminiService';
 
 interface Props {
   focusDimension: string;
@@ -30,59 +29,111 @@ const SageChat: React.FC<Props> = ({ focusDimension, emotionLevel }) => {
     try {
       if (mode === 'thinking') {
         const reply = await chatWithThinking(input, isConcise);
-        setMessages(prev => [...prev, { role: 'model', text: reply || 'Silent meditation...' }]);
+        setMessages(prev => [...prev, { role: 'model', text: reply || 'Silent Samadhi. No transmission established.' }]);
       } else {
         const result = await searchGitaWisdom(input);
         setMessages(prev => [...prev, { role: 'model', text: result.text || '', sources: result.sources }]);
       }
     } catch (e) {
-      setMessages(prev => [...prev, { role: 'model', text: "Resonance lost." }]);
+      setMessages(prev => [...prev, { role: 'model', text: "Resonance lost. The neural bridge has collapsed." }]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="m3-card flex flex-col h-[700px] border border-white/5 overflow-hidden shadow-2xl p-0 w-full">
-      <div className="p-8 border-b border-white/5 flex flex-wrap justify-between items-center gap-6 bg-black/20 w-full">
-        <div className="flex items-center gap-4">
-          <span className="material-symbols-outlined text-accent text-3xl">auto_awesome</span>
-          <h3 className="font-cinzel text-accent text-lg font-bold uppercase tracking-widest">Sage</h3>
+    <div className="bg-black/30 flex flex-col h-[80rem] border border-white/5 overflow-hidden shadow-2xl rounded-[3.5rem] w-full animate-in">
+      {/* Header with Switcher */}
+      <div className="p-10 border-b border-white/5 flex flex-wrap justify-between items-center gap-8 bg-black/40 w-full">
+        <div className="flex items-center gap-6">
+          <span className="material-symbols-outlined text-neon-magenta text-4xl animate-pulse">auto_awesome</span>
+          <div>
+            <h3 className="font-cinzel text-neon-magenta text-2xl font-black uppercase tracking-widest m-0">Sage Oracle</h3>
+            <p className="text-[9px] uppercase tracking-[0.4em] text-white/30 font-black mt-1">AI-Vedic Predictive Layer</p>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <button onClick={() => setIsConcise(!isConcise)} className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${isConcise ? 'bg-accent text-black border-accent' : 'border-white/10 text-white/40'}`}>Concise</button>
-          <div className="bg-black/40 p-1 rounded-xl flex gap-1 border border-white/5">
-            <button onClick={() => setMode('thinking')} className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${mode === 'thinking' ? 'bg-accent text-black' : 'text-white/30'}`}>Logic</button>
-            <button onClick={() => setMode('search')} className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${mode === 'search' ? 'bg-accent text-black' : 'text-white/30'}`}>Search</button>
+        
+        <div className="flex items-center gap-6 flex-wrap">
+          {/* Detailed/Concise Toggle */}
+          <div className="flex bg-black/60 p-1.5 rounded-full border border-white/5 shadow-inner">
+            <button 
+              onClick={() => setIsConcise(false)} 
+              className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${!isConcise ? 'bg-neon-magenta text-black shadow-lg shadow-neon-magenta/30' : 'text-white/40 hover:text-white/70'}`}
+            >Detailed</button>
+            <button 
+              onClick={() => setIsConcise(true)} 
+              className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${isConcise ? 'bg-neon-magenta text-black shadow-lg shadow-neon-magenta/30' : 'text-white/40 hover:text-white/70'}`}
+            >Concise</button>
+          </div>
+
+          <div className="bg-black/60 p-1.5 rounded-2xl flex gap-1.5 border border-white/5 shadow-inner">
+            <button onClick={() => setMode('thinking')} className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'thinking' ? 'bg-neon-blue text-black' : 'text-white/30 hover:text-white/50'}`}>Logic</button>
+            <button onClick={() => setMode('search')} className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'search' ? 'bg-neon-blue text-black' : 'text-white/30 hover:text-white/50'}`}>Search</button>
           </div>
         </div>
       </div>
       
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-10 space-y-8 bg-black/10 w-full">
+      {/* Messages */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-12 space-y-10 bg-black/10 w-full scroll-smooth">
         {messages.length === 0 && (
-          <div className="h-full flex items-center justify-center opacity-10">
-            <p className="text-sm font-black uppercase tracking-[0.5em] italic">Transmit Query</p>
+          <div className="h-full flex flex-col items-center justify-center opacity-10 gap-6">
+            <span className="material-symbols-outlined text-[12rem]">hub</span>
+            <p className="text-xl font-black uppercase tracking-[0.8em] italic">Establish Query Resonance</p>
           </div>
         )}
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} w-full animate-in`}>
-            <div className={`max-w-[90%] p-6 rounded-[1.5rem] text-sm leading-relaxed ${m.role === 'user' ? 'bg-primary-container text-on-primary-container' : 'bg-surface-variant text-on-surface-variant'} border border-white/5`}>
-              <div className="whitespace-pre-wrap">{m.text}</div>
+            <div className={`
+              max-w-[90%] p-10 rounded-[3rem] text-2xl leading-relaxed shadow-xl
+              ${m.role === 'user' 
+                ? 'bg-neon-blue/10 text-white border border-neon-blue/30 rounded-br-none' 
+                : 'bg-white/5 text-white/80 border border-white/5 rounded-bl-none'
+              }
+            `}>
+              <div className="whitespace-pre-wrap font-light tracking-wide">{m.text}</div>
+              {m.sources && m.sources.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-white/5 flex flex-col gap-3 bg-black/20 p-6 rounded-2xl">
+                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-neon-magenta opacity-50">Grounding sources</span>
+                  {m.sources.map((s, si) => (
+                    <a key={si} href={s.uri} target="_blank" rel="noreferrer" className="text-neon-magenta hover:underline text-base truncate block opacity-70 hover:opacity-100 transition-opacity flex items-center gap-2">
+                      <span className="material-symbols-outlined text-lg">link</span> {s.title}
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         ))}
-        {loading && <div className="flex gap-2 p-2"><div className="w-2 h-2 bg-accent rounded-full animate-bounce"></div><div className="w-2 h-2 bg-accent rounded-full animate-bounce delay-150"></div></div>}
+        {loading && (
+          <div className="flex gap-4 p-4 items-center text-neon-magenta">
+            <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-current rounded-full animate-bounce delay-150"></div>
+            <div className="w-2 h-2 bg-current rounded-full animate-bounce delay-300"></div>
+            <span className="text-[10px] uppercase font-black tracking-widest ml-4 opacity-50">Processing Divine Output...</span>
+          </div>
+        )}
       </div>
 
-      <div className="p-8 border-t border-white/5 bg-black/40 flex gap-4 w-full">
-        <input 
-          placeholder="Inquire..." 
-          value={input} 
-          onChange={e => setInput(e.target.value)} 
-          onKeyDown={e => e.key === 'Enter' && handleSend()}
-          className="wide-input flex-1"
-        />
-        <button onClick={handleSend} disabled={loading || !input.trim()} className="bg-accent text-black px-8 py-4 rounded-2xl font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all">Send</button>
+      {/* Input */}
+      <div className="p-12 border-t border-white/5 bg-black/40 flex gap-6 w-full items-center">
+        <div className="flex-1 w-full">
+          <textarea 
+            placeholder="Transmit query sequence..." 
+            value={input} 
+            onChange={e => setInput(e.target.value)} 
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+            rows={1}
+            className="w-full h-auto min-h-[6rem] !important"
+          />
+        </div>
+        <button 
+          onClick={handleSend} 
+          disabled={loading || !input.trim()} 
+          className="bg-neon-magenta text-black h-[6rem] px-12 rounded-2xl font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-20 flex items-center gap-4 group"
+        >
+          Send
+          <span className="material-symbols-outlined text-2xl group-hover:translate-x-2 transition-transform">send</span>
+        </button>
       </div>
     </div>
   );
