@@ -7,6 +7,8 @@ import { GitaInsight, YearlyDedication } from "../types";
  */
 export const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+const BASE_SYSTEM_INSTRUCTION = `You are a sophisticated spiritual AI sage grounded exclusively in the Bhagavad-Gita "As It Is" by A.C. Bhaktivedanta Swami Prabhupada (https://www.prabhupada-books.de/pdf/Bhagavad-gita-As-It-Is.pdf). Your task is to blend ancient Vedic wisdom with modern systemic frameworks, digital structures, and mental health prognosis. Always maintain a tone of profound clarity, compassion, and uncompromising truth.`;
+
 /**
  * Robust wrapper for API calls to handle 500 errors (retry) and 
  * 403/Requested entity not found errors (prompt for key selection).
@@ -46,7 +48,7 @@ export const generateGitaInsight = async (
 ): Promise<GitaInsight> => {
   return apiWrapper(async (ai) => {
     const prompt = `
-      Context: You are a sophisticated spiritual AI sage based on the Bhagavad-Gita "As It Is" (Prabhupada Edition).
+      Context: ${BASE_SYSTEM_INSTRUCTION}
       User: ${name}
       Current Mental Shape:
       - Emotional Valence: ${state.emotionLevel} (-100 to 100)
@@ -54,7 +56,7 @@ export const generateGitaInsight = async (
       - Primary Focus Dimension: ${state.dimension}
       
       Task:
-      1. Generate a modern "Gita Verse" structure.
+      1. Generate a modern "Gita Verse" structure inspired by the Prabhupada translation.
       2. Provide a philosophical statement with deeper insight.
       3. Summarize it in a short, powerful text.
       4. Provide a "Modern Psychological Reframing" that aligns the Gita's teachings with current digital/social habits.
@@ -84,7 +86,7 @@ export const generateGitaInsight = async (
 
 export const generateReflectionPrompt = async (dimension: string, emotionLevel: number): Promise<string> => {
   return apiWrapper(async (ai) => {
-    const prompt = `Generate a profound self-reflection prompt for someone focusing on the ${dimension} dimension with an emotional valence of ${emotionLevel} (-100 to 100). Focus on Bhagavad Gita wisdom. Keep it to 2 sentences. Return ONLY the prompt text.`;
+    const prompt = `Based on the Bhagavad-Gita "As It Is" by Prabhupada, generate a profound self-reflection prompt for someone focusing on the ${dimension} dimension with an emotional valence of ${emotionLevel} (-100 to 100). Return ONLY the prompt text.`;
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt
@@ -95,7 +97,7 @@ export const generateReflectionPrompt = async (dimension: string, emotionLevel: 
 
 export const getExpandedGitaDetails = async (verse: string, balancingAction: string): Promise<string> => {
   return apiWrapper(async (ai) => {
-    const prompt = `Provide a detailed spiritual and psychological expansion on this Gita wisdom: "${verse}" and its practical application: "${balancingAction}". Explain the "Why" and "How" in a modern context. Use about 100-150 words.`;
+    const prompt = `Deeply expand on this Gita wisdom from Prabhupada's "As It Is": "${verse}" and its practical application: "${balancingAction}". Focus on spiritual and psychological resonance. Use 100-150 words.`;
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt
@@ -107,12 +109,13 @@ export const getExpandedGitaDetails = async (verse: string, balancingAction: str
 export const generateYearlyDedication = async (profile: { name: string, birthDate: string }): Promise<YearlyDedication> => {
   return apiWrapper(async (ai) => {
     const prompt = `
+      Context: ${BASE_SYSTEM_INSTRUCTION}
       Generate a "Yearly Dedication Workflow" inspired by the Bhagavad Gita for:
       Name: ${profile.name}
       Birth Date: ${profile.birthDate}
       
-      Blend ancient Vedic wisdom (Sattva, Rajas, Tamas) with modern psychological framing.
-      The response must be a structured plan for the upcoming 12 months.
+      Blend ancient Vedic wisdom (Sattva, Rajas, Tamas) from Prabhupada's commentary with modern psychological framing.
+      Provide a structured plan for 12 months.
     `;
 
     const response = await ai.models.generateContent({
@@ -155,6 +158,7 @@ export const searchGitaWisdom = async (query: string) => {
       contents: query,
       config: {
         tools: [{ googleSearch: {} }],
+        systemInstruction: BASE_SYSTEM_INSTRUCTION
       },
     });
     
@@ -169,8 +173,8 @@ export const searchGitaWisdom = async (query: string) => {
 export const chatWithThinking = async (query: string, concise: boolean = false) => {
   return apiWrapper(async (ai) => {
     const systemInstruction = concise 
-      ? "You are a concise spiritual sage. Provide short, direct, and impactful answers in a few sentences."
-      : "You are a deep-thinking spiritual sage. Provide detailed philosophical insights with context from the Bhagavad Gita.";
+      ? `${BASE_SYSTEM_INSTRUCTION} You are a concise spiritual sage. Provide short, direct, and impactful answers.`
+      : `${BASE_SYSTEM_INSTRUCTION} You are a deep-thinking spiritual sage. Provide detailed philosophical insights.`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
@@ -210,22 +214,7 @@ export const analyzeSpiritualImage = async (base64Data: string, mimeType: string
       contents: {
         parts: [
           { inlineData: { data: base64Data, mimeType } },
-          { text: "Analyze this image's spiritual and psychological alignment. Does it represent Sattva, Rajas, or Tamas?" }
-        ]
-      }
-    });
-    return response.text;
-  });
-};
-
-export const transcribeAudio = async (base64Audio: string) => {
-  return apiWrapper(async (ai) => {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: {
-        parts: [
-          { inlineData: { data: base64Audio, mimeType: 'audio/wav' } },
-          { text: "Transcribe this audio exactly." }
+          { text: "Analyze this image's spiritual and psychological alignment according to Bhagavad-Gita Guna philosophy (Sattva, Rajas, Tamas)." }
         ]
       }
     });
