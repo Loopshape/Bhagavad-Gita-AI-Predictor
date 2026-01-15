@@ -23,6 +23,7 @@ export interface GitaInsight {
   philosophicalStatement: string;
   modernReframing: string;
   neuralMeshID: string;
+  rating?: 'Helpful' | 'Insightful' | 'Confusing';
 }
 
 export interface ChatMessage {
@@ -31,6 +32,13 @@ export interface ChatMessage {
   thought?: string;
   steps?: NeuralStep[];
   sources?: { uri: string; title: string }[];
+}
+
+export interface ArchivedAnalysis {
+  id: string;
+  timestamp: number;
+  imageUrl: string;
+  analysis: string;
 }
 
 export enum GunaType {

@@ -9,24 +9,39 @@ const BASE_SYSTEM_INSTRUCTION = `You are a sophisticated spiritual AI sage groun
 
 const generateHash = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
+/**
+ * Enhanced API Wrapper with detailed error handling and key selection triggers.
+ */
 async function apiWrapper<T>(fn: (ai: GoogleGenAI) => Promise<T>, retries = 2): Promise<T> {
-  // Create a new GoogleGenAI instance right before making an API call to ensure it always uses the most up-to-date API key.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     return await fn(ai);
   } catch (error: any) {
     const errorMsg = error.message || "";
-    // If key not found, trigger key selection dialog and retry immediately.
-    if (errorMsg.includes("Requested entity was not found") && (window as any).aistudio?.openSelectKey) {
-      await (window as any).aistudio.openSelectKey();
-      const newAi = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      return await fn(newAi);
+    console.error("[Gemini API Error]:", error);
+
+    // Specific handling for missing/invalid keys as per guidelines
+    if (errorMsg.includes("Requested entity was not found") || error.status === 404 || error.status === 401) {
+      if ((window as any).aistudio?.openSelectKey) {
+        await (window as any).aistudio.openSelectKey();
+        const retryAi = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        return await fn(retryAi);
+      }
     }
-    if (retries > 0 && error.status >= 500) {
-      await new Promise(r => setTimeout(r, 2000));
+
+    // Exponential backoff for 5xx errors
+    if (retries > 0 && (error.status >= 500 || error.status === 429)) {
+      const wait = (3 - retries) * 2000;
+      await new Promise(r => setTimeout(r, wait));
       return apiWrapper(fn, retries - 1);
     }
-    throw error;
+
+    // User-friendly re-throw
+    let userMessage = "The Akashic connection was interrupted.";
+    if (error.status === 429) userMessage = "The Neural Mesh is overloaded. Please wait a moment.";
+    if (error.status >= 500) userMessage = "The Vedic servers are temporarily unresponsive.";
+    
+    throw new Error(userMessage);
   }
 }
 
@@ -35,7 +50,6 @@ export const generateNeuralGitaInsight = async (
   state: { emotionLevel: number; energyVector: number; dimension: string }
 ): Promise<{ insight: GitaInsight, steps: NeuralStep[] }> => {
   return apiWrapper(async (ai) => {
-    // Simulate parallel reasoning streams for UX
     const steps: NeuralStep[] = [
       { agent: 'Sattva-Logic', hash: generateHash(), content: "Analyzing spiritual equilibrium and sattvic alignment...", timestamp: Date.now() },
       { agent: 'Rajas-Action', hash: generateHash(), content: "Processing energy vectors and material engagement nodes...", timestamp: Date.now() },
@@ -69,7 +83,6 @@ export const generateNeuralGitaInsight = async (
       }
     });
 
-    // Extract text directly from the property .text
     const insight = JSON.parse(response.text || "{}");
     return { insight: { ...insight, neuralMeshID: generateHash() }, steps };
   });
@@ -82,7 +95,6 @@ export const chatWithThinkingMesh = async (query: string, dimension: string) => 
       contents: query,
       config: {
         systemInstruction: `${BASE_SYSTEM_INSTRUCTION} Dimension: ${dimension}. You are a deep-thinking mesh agent.`,
-        // Thinking budget for high-complexity reasoning
         thinkingConfig: { thinkingBudget: 32768 }
       },
     });
@@ -97,7 +109,6 @@ export const generateProImage = async (prompt: string, size: "1K" | "2K" | "4K")
       contents: { parts: [{ text: prompt }] },
       config: { imageConfig: { aspectRatio: "1:1", imageSize: size } }
     });
-    // Iterate through parts to find the image part
     for (const part of response.candidates?.[0]?.content?.parts || []) {
       if (part.inlineData) return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
     }
@@ -105,10 +116,6 @@ export const generateProImage = async (prompt: string, size: "1K" | "2K" | "4K")
   });
 };
 
-/**
- * Fix: Added the missing analyzeSpiritualImage function.
- * Uses gemini-3-flash-preview to analyze multimodal input.
- */
 export const analyzeSpiritualImage = async (base64: string, mimeType: string) => {
   return apiWrapper(async (ai) => {
     const response = await ai.models.generateContent({
@@ -122,7 +129,7 @@ export const analyzeSpiritualImage = async (base64: string, mimeType: string) =>
             },
           },
           {
-            text: "Analyze this image through the lens of the Bhagavad Gita. Identify the dominant Gunas (Sattva, Rajas, Tamas) and provide a spiritual reflection on its composition and meaning.",
+            text: "Analyze this image through the lens of the Bhagavad Gita. Identify the dominant Gunas (Sattva, Rajas, Tamas) and provide a spiritual reflection on its composition and meaning. Limit to 3 concise paragraphs.",
           },
         ],
       },
@@ -134,7 +141,6 @@ export const analyzeSpiritualImage = async (base64: string, mimeType: string) =>
   });
 };
 
-// PCM Audio Decoding/Encoding helpers
 export function decode(base64: string) { return new Uint8Array(atob(base64).split("").map(c => c.charCodeAt(0))); }
 export function encode(bytes: Uint8Array) { return btoa(Array.from(bytes).map(b => String.fromCharCode(b)).join("")); }
 export async function decodeAudioData(data: Uint8Array, ctx: AudioContext, sampleRate: number, numChannels: number): Promise<AudioBuffer> {

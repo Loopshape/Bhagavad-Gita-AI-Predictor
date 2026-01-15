@@ -12,12 +12,33 @@ import { generateNeuralGitaInsight } from './services/geminiService';
 import { soundService } from './services/soundService';
 
 const App: React.FC = () => {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  // Initialize from Local Storage
+  const [profile, setProfile] = useState<UserProfile | null>(() => {
+    const saved = localStorage.getItem('gita_user_profile');
+    return saved ? JSON.parse(saved) : null;
+  });
+  
   const [tempProfile, setTempProfile] = useState<UserProfile>({ name: '', birthDate: '' });
-  const [state, setState] = useState<AlignmentState>({ emotionLevel: 0, energyVector: 50, focusDimension: 'Material' });
+  
+  const [state, setState] = useState<AlignmentState>(() => {
+    const saved = localStorage.getItem('gita_alignment_state');
+    return saved ? JSON.parse(saved) : { emotionLevel: 0, energyVector: 50, focusDimension: 'Material' };
+  });
+
   const [insight, setInsight] = useState<GitaInsight | null>(null);
   const [steps, setSteps] = useState<NeuralStep[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Persist profile and state changes
+  useEffect(() => {
+    if (profile) localStorage.setItem('gita_user_profile', JSON.stringify(profile));
+    else localStorage.removeItem('gita_user_profile');
+  }, [profile]);
+
+  useEffect(() => {
+    localStorage.setItem('gita_alignment_state', JSON.stringify(state));
+  }, [state]);
 
   useEffect(() => {
     soundService.playTransition();
@@ -30,12 +51,13 @@ const App: React.FC = () => {
       setProfile(tempProfile);
       setLoading(false);
       soundService.playTransition();
-    }, 2000);
+    }, 1500);
   };
 
   const fetchInsight = useCallback(async () => {
     if (!profile) return;
     setLoading(true);
+    setError(null);
     try {
       const { insight: result, steps: neuralSteps } = await generateNeuralGitaInsight(profile.name, { 
         emotionLevel: state.emotionLevel, 
@@ -44,12 +66,30 @@ const App: React.FC = () => {
       });
       setInsight(result);
       setSteps(neuralSteps);
-    } catch (e) {
-      console.error(e);
+      soundService.playBell(770, 0.4);
+    } catch (e: any) {
+      setError(e.message);
     } finally {
       setLoading(false);
     }
   }, [profile, state]);
+
+  const handleFeedback = (rating: GitaInsight['rating']) => {
+    if (!insight) return;
+    const updated = { ...insight, rating };
+    setInsight(updated);
+    
+    // Store feedback locally
+    const savedFeedback = JSON.parse(localStorage.getItem('gita_insights_history') || '[]');
+    savedFeedback.push({
+      ...updated,
+      timestamp: Date.now(),
+      stateSnapshot: state
+    });
+    localStorage.setItem('gita_insights_history', JSON.stringify(savedFeedback.slice(-20)));
+    
+    soundService.playClick();
+  };
 
   if (!profile) {
     return (
@@ -91,11 +131,12 @@ const App: React.FC = () => {
           </div>
         </div>
         <div className="flex gap-6 items-center">
+             {error && <span className="text-[10px] text-[#ff3e3e] uppercase font-code animate-pulse mr-4">{error}</span>}
              <div className="px-4 py-2 bg-white/5 rounded-lg border border-white/5 flex gap-4 text-[10px] font-code">
                 <span className="text-[#00f2ff]">CPU: 12%</span>
                 <span className="text-[#ff00ff]">MEM: 512MB</span>
              </div>
-             <button onClick={() => setProfile(null)} className="p-3 hover:bg-white/5 rounded-full transition-all">
+             <button onClick={() => { setProfile(null); localStorage.removeItem('gita_user_profile'); }} className="p-3 hover:bg-white/5 rounded-full transition-all">
                 <span className="material-symbols-outlined text-white/30 hover:text-[#ff3e3e]">logout</span>
              </button>
         </div>
@@ -110,7 +151,7 @@ const App: React.FC = () => {
 
       {/* MAIN RIGHT COLUMN */}
       <main className="grid-area-right flex flex-col gap-6 min-h-0">
-        <div className="glass-panel p-10 flex flex-col gap-8 flex-1 min-h-0">
+        <div className="glass-panel p-10 flex flex-col gap-8 flex-1 min-h-0 relative">
             <div className="flex justify-between items-center border-b border-white/5 pb-6">
                 <h3 className="font-cinzel text-2xl tracking-widest text-[#ffcc00] uppercase">Neural Wisdom Output</h3>
                 <button onClick={fetchInsight} className="px-8 py-3 bg-[#00f2ff] text-black text-[10px] font-black uppercase tracking-widest rounded-lg hover:scale-105 transition-all">Seek Mesh Logic</button>
@@ -119,10 +160,32 @@ const App: React.FC = () => {
             <div className="flex-1 overflow-y-auto pr-4 space-y-10 custom-scroll">
                 {insight ? (
                     <div className="space-y-10 layer-transition">
-                        <div className="bg-black/40 p-12 rounded-3xl border border-[#ffcc00]/10 text-center relative">
+                        <div className="bg-black/40 p-12 rounded-3xl border border-[#ffcc00]/10 text-center relative group">
                             <span className="absolute top-4 left-6 text-[8px] font-code text-[#ffcc00]/30">MESH_REF: {insight.neuralMeshID}</span>
                             <p className="font-cinzel text-4xl italic text-white/90 leading-relaxed">"{insight.verse}"</p>
                         </div>
+                        
+                        {/* Rating Feedback UI */}
+                        {!insight.rating ? (
+                          <div className="flex items-center justify-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5 layer-transition">
+                            <span className="text-[10px] font-code text-white/40 uppercase tracking-widest">Rate this insight:</span>
+                            {(['Helpful', 'Insightful', 'Confusing'] as const).map(r => (
+                              <button 
+                                key={r}
+                                onClick={() => handleFeedback(r)}
+                                className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-[9px] uppercase tracking-widest hover:bg-white/10 transition-all text-white/60"
+                              >
+                                {r}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center gap-2 text-[#00ff80] text-[10px] font-code uppercase tracking-widest">
+                            <span className="material-symbols-outlined text-sm">check_circle</span>
+                            Feedback received: {insight.rating}
+                          </div>
+                        )}
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="p-8 bg-white/5 rounded-2xl border border-white/5 hover:border-[#00f2ff]/20 transition-all">
                                 <h6 className="text-[10px] font-code text-[#00f2ff] uppercase tracking-widest mb-4">Vedic Core</h6>
@@ -133,6 +196,7 @@ const App: React.FC = () => {
                                 <p className="text-lg font-light leading-relaxed text-white/70">{insight.modernReframing}</p>
                             </div>
                         </div>
+
                         {steps.length > 0 && (
                             <div className="pt-8 border-t border-white/5">
                                 <p className="text-[10px] font-code text-white/20 uppercase tracking-[0.5em] mb-6">Parallel Reasoning Streams</p>
