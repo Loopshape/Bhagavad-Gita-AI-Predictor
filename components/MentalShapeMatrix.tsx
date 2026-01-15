@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useMemo, useState } from 'react';
+
+import React, { useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
 import { AlignmentState } from '../types';
-import { COLORS } from '../constants';
+import { soundService } from '../services/soundService';
 
 interface Props {
   state: AlignmentState;
@@ -10,143 +11,85 @@ interface Props {
 
 const MentalShapeMatrix: React.FC<Props> = ({ state, onChange }) => {
   const svgRef = useRef<SVGSVGElement>(null);
-  const [localDimension, setLocalDimension] = useState<AlignmentState['focusDimension'] | 'Default'>(state.focusDimension);
-
-  useEffect(() => {
-    setLocalDimension(state.focusDimension);
-  }, [state.focusDimension]);
-
-  const activeDimension = localDimension === 'Default' ? state.focusDimension : localDimension;
 
   const prognosis = useMemo(() => {
-    if (state.emotionLevel > 30 && state.energyVector > 50) return { label: "Sattvic Clarity", desc: "Stable energy, positive outlook. High prognosis for evolutionary growth.", color: COLORS.positive };
-    if (state.energyVector > 70) return { label: "Rajasic Turbulence", desc: "High drive with potential for systemic anxiety.", color: COLORS.accent };
-    if (state.emotionLevel < -30 && state.energyVector < 40) return { label: "Tamasic Stagnation", desc: "Low energy, negative affection. Risk of deep inertial entanglement.", color: COLORS.negative };
-    return { label: "Dynamic Equilibrium", desc: "Balanced state. Adaptable to change.", color: COLORS.neutral };
+    if (state.emotionLevel > 30 && state.energyVector > 50) return { label: "Sattvic Clarity", color: "#00ff80", desc: "Pure equilibrium." };
+    if (state.energyVector > 70) return { label: "Rajasic Drive", color: "#ffcc00", desc: "Passionate motion." };
+    if (state.emotionLevel < -30 && state.energyVector < 40) return { label: "Tamasic Void", color: "#ff3e3e", desc: "Static inertia." };
+    return { label: "Dynamic Balance", color: "#00f2ff", desc: "Fluid transition." };
   }, [state]);
 
   useEffect(() => {
     if (!svgRef.current) return;
-
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
-    const width = 400;
-    const height = 400;
-    const margin = 40;
+    const w = 400, h = 400, m = 30;
+    const xScale = d3.scaleLinear().domain([-100, 100]).range([m, w-m]);
+    const yScale = d3.scaleLinear().domain([0, 100]).range([h-m, m]);
 
-    const xScale = d3.scaleLinear().domain([-100, 100]).range([margin, width - margin]);
-    const yScale = d3.scaleLinear().domain([0, 100]).range([height - margin, margin]);
+    // Grid
+    const lines = [-50, 0, 50];
+    lines.forEach(l => {
+        svg.append("line").attr("x1", xScale(l)).attr("y1", m).attr("x2", xScale(l)).attr("y2", h-m).attr("stroke", "rgba(255,255,255,0.03)");
+        svg.append("line").attr("x1", m).attr("y1", yScale(l)).attr("x2", w-m).attr("y2", yScale(l)).attr("stroke", "rgba(255,255,255,0.03)");
+    });
 
-    const getZoneVisuals = (zone: 'Tamas' | 'Rajas' | 'Sattva') => {
-      const baseOpacity = 0.05;
-      const emphasisOpacity = 0.4;
-      const dominantOpacity = 0.8;
-
-      switch (activeDimension) {
-        case 'Spiritual':
-          if (zone === 'Sattva') return { opacity: dominantOpacity, glow: true };
-          if (zone === 'Rajas') return { opacity: baseOpacity * 2, glow: false };
-          return { opacity: baseOpacity, glow: false };
-        case 'Material':
-          if (zone === 'Rajas') return { opacity: dominantOpacity, glow: true };
-          return { opacity: baseOpacity, glow: false };
-        case 'Digital':
-          if (zone === 'Rajas') return { opacity: emphasisOpacity, glow: true };
-          if (zone === 'Tamas') return { opacity: emphasisOpacity * 0.5, glow: false };
-          return { opacity: baseOpacity, glow: false };
-        case 'Social':
-          if (zone === 'Tamas') return { opacity: dominantOpacity, glow: true };
-          if (zone === 'Rajas') return { opacity: emphasisOpacity, glow: false };
-          return { opacity: baseOpacity, glow: false };
-        default:
-          return { opacity: 0.1, glow: false };
-      }
-    };
-
+    // Hexagon regions
     const zones = [
-      { x: [-100, -20], y: [0, 40], color: COLORS.negative, label: 'Tamasic', type: 'Tamas' },
-      { x: [-100, 100], y: [60, 100], color: COLORS.accent, label: 'Rajasic', type: 'Rajas' },
-      { x: [20, 100], y: [40, 80], color: COLORS.positive, label: 'Sattvic', type: 'Sattva' }
+      { id: 'Sattva', points: [[20,40], [100,40], [100,100], [20,100]], color: '#00ff80' },
+      { id: 'Rajas', points: [[-100,60], [100,60], [100,100], [-100,100]], color: '#ffcc00' },
+      { id: 'Tamas', points: [[-100,0], [-20,0], [-20,40], [-100,40]], color: '#ff3e3e' }
     ];
 
     zones.forEach(z => {
-      const visuals = getZoneVisuals(z.type as any);
-      
-      const rect = svg.append("rect")
-        .attr("x", xScale(z.x[0]))
-        .attr("y", yScale(z.y[1]))
-        .attr("width", xScale(z.x[1]) - xScale(z.x[0]))
-        .attr("height", yScale(z.y[0]) - yScale(z.y[1]))
+      svg.append("rect")
+        .attr("x", xScale(z.points[0][0]))
+        .attr("y", yScale(z.points[2][1]))
+        .attr("width", xScale(z.points[1][0]) - xScale(z.points[0][0]))
+        .attr("height", yScale(z.points[0][1]) - yScale(z.points[2][1]))
         .attr("fill", z.color)
-        .attr("opacity", visuals.opacity)
-        .attr("rx", 20)
-        .attr("class", "transition-all duration-700");
-
-      if (visuals.glow) {
-        rect.attr("filter", "url(#matrixGlow)");
-      }
-
-      svg.append("text")
-        .attr("x", xScale(z.x[0]) + 10)
-        .attr("y", yScale(z.y[1]) + 20)
-        .attr("fill", "white")
-        .attr("opacity", visuals.glow ? 1 : 0.3)
-        .attr("class", "text-[9px] font-black uppercase tracking-widest")
-        .text(z.label);
+        .attr("opacity", 0.05)
+        .attr("rx", 10);
     });
 
-    const defs = svg.append("defs");
-    const filter = defs.append("filter").attr("id", "matrixGlow");
-    filter.append("feGaussianBlur").attr("stdDeviation", "3").attr("result", "blur");
-    const feMerge = filter.append("feMerge");
-    feMerge.append("feMergeNode").attr("in", "blur");
-    feMerge.append("feMergeNode").attr("in", "SourceGraphic");
-
-    const axisColor = "rgba(255,255,255,0.05)";
-    svg.append("line").attr("x1", margin).attr("y1", height/2).attr("x2", width-margin).attr("y2", height/2).attr("stroke", axisColor);
-    svg.append("line").attr("x1", width/2).attr("y1", margin).attr("x2", width/2).attr("y2", height-margin).attr("stroke", axisColor);
-
+    // Pulse point
     svg.append("circle")
       .attr("cx", xScale(state.emotionLevel))
       .attr("cy", yScale(state.energyVector))
-      .attr("r", 8)
-      .attr("fill", COLORS.accent)
-      .attr("stroke", "white")
-      .attr("stroke-width", 2)
-      .attr("filter", "url(#matrixGlow)");
+      .attr("r", 6)
+      .attr("fill", prognosis.color)
+      .attr("filter", "drop-shadow(0 0 10px "+prognosis.color+")")
+      .attr("class", "animate-pulse");
 
-  }, [state, activeDimension]);
+  }, [state, prognosis]);
 
   return (
-    <div className="glass p-8 rounded-[3rem] border border-white/5 bg-black/60 shadow-2xl transition-all animate-in">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h3 className="font-cinzel text-2xl text-accent tracking-widest">Mental Matrix</h3>
-          <p className="text-[10px] text-subtext uppercase tracking-[0.3em] font-black opacity-40">Systemic Resonance</p>
-        </div>
-        <select 
-          value={localDimension}
-          onChange={(e) => setLocalDimension(e.target.value as any)}
-          className="text-[10px] bg-black/40 border border-white/10 rounded-full px-4 py-2 text-accent uppercase font-black"
-        >
-          <option value="Default">Auto: {state.focusDimension}</option>
-          <option value="Material">Material</option>
-          <option value="Spiritual">Spiritual</option>
-          <option value="Digital">Digital</option>
-          <option value="Social">Social</option>
-        </select>
+    <div className="glass-panel p-8 group relative overflow-hidden">
+      <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none font-code text-[8px] uppercase tracking-widest leading-tight">
+        Matrix_Scan_Active<br/>Vedic_Protocol_43F<br/>Entropy: {Math.random().toFixed(4)}
       </div>
       
-      <div className="relative bg-[#050505] rounded-[2rem] overflow-hidden border border-white/5">
-        <svg ref={svgRef} viewBox="0 0 400 400" className="w-full h-auto mx-auto" />
+      <div className="flex justify-between items-end mb-8">
+        <div>
+          <h3 className="font-cinzel text-[#ffcc00] text-xl tracking-[0.3em] uppercase mb-2">Mental Matrix</h3>
+          <p className="text-[9px] font-code text-white/40 tracking-widest uppercase">Akashic Resonance Point</p>
+        </div>
+        <div className="text-right">
+          <span className="text-[10px] font-code text-white/20 block">SYNC_STATUS</span>
+          <span className="text-[11px] font-black tracking-widest uppercase" style={{ color: prognosis.color }}>0x{prognosis.label.split(' ')[0].toUpperCase()}</span>
+        </div>
       </div>
 
-      <div className="mt-8 flex items-start gap-6 p-6 bg-white/[0.03] rounded-[2rem] border border-white/5">
-        <div className="w-4 h-4 rounded-full mt-1 shrink-0" style={{ backgroundColor: prognosis.color }}></div>
+      <div className="relative aspect-square rounded-2xl bg-black/40 border border-white/5 overflow-hidden">
+        <svg ref={svgRef} viewBox="0 0 400 400" className="w-full h-full" />
+      </div>
+
+      <div className="mt-8 pt-8 border-t border-white/5 flex gap-6">
+        <div className="w-1 h-12 rounded-full" style={{ background: prognosis.color }}></div>
         <div>
-          <span className="font-cinzel text-lg block font-bold" style={{ color: prognosis.color }}>{prognosis.label}</span>
-          <p className="text-sm text-slate-400 mt-2 italic font-light">{prognosis.desc}</p>
+          <h4 className="font-cinzel text-white text-lg tracking-widest">{prognosis.label}</h4>
+          <p className="text-white/40 text-xs italic mt-1">{prognosis.desc}</p>
         </div>
       </div>
     </div>
