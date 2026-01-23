@@ -1,0 +1,55 @@
+ai_memory.db
+wal
+[INFO] Database initialisation complete
+WSL Runtime AI Orchestration v3.0
+================================
+Commands:
+  reason "<prompt>"      – Run the full 8-Agent + Coordinator pipeline (JSON output)
+  recall "<query>" [N]   – Keyword-based memory search (default N=10)
+  stats                  – System statistics (JSON)
+  cleanup [days]         – Delete memories older than N days (default 30)
+  export                 – Export a timestamped DB backup (rotates to 5 latest)
+  status                 – Quick human-readable status dump
+  agents                 – List agents with their 2π/8 phase angles
+  models                 – List available Ollama models
+  help                   – Show this help
+
+Configuration:
+  You may create a file $HOME/.ai_config to override any constant
+  (OLLAMA_HOST, OLLAMA_MODEL, MAX_CONCURRENT_AGENTS, …).
+
+Examples:
+  $0 reason "Analyze this code and suggest improvements"
+  $0 recall "semantic memory" 5
+(.env.local) loop@LOOPCORE:~/Gita$ ai *
+[INFO] Ensuring SQLite database schema at /home/loop/ai-runtime/.repository/wsl-runtime/ai_memory.db
+wal
+[INFO] Database initialisation complete
+WSL Runtime AI Orchestration v3.0
+================================
+Commands:
+  reason "<prompt>"      – Run the full 8-Agent + Coordinator pipeline (JSON output)
+  recall "<query>" [N]   – Keyword-based memory search (default N=10)
+  stats                  – System statistics (JSON)
+  cleanup [days]         – Delete memories older than N days (default 30)
+  export                 – Export a timestamped DB backup (rotates to 5 latest)
+  status                 – Quick human-readable status dump
+  agents                 – List agents with their 2π/8 phase angles
+  models                 – List available Ollama models
+  help                   – Show this help
+
+Configuration:
+  You may create a file $HOME/.ai_config to override any constant
+  (OLLAMA_HOST, OLLAMA_MODEL, MAX_CONCURRENT_AGENTS, …).
+
+Examples:
+  $0 reason "Analyze this code and suggest improvements"
+  $0 recall "semantic memory" 5
+(.env.local) loop@LOOPCORE:~/Gita$ ai reason "Analyze this git repository and refine wit
+h local ollama api to file /home/loop/ai-runtime/main.sh"
+[INFO] Ensuring SQLite database schema at /home/loop/ai-runtime/.repository/wsl-runtime/ai_memory.db
+wal
+[INFO] Database initialisation complete
+[INFO] Starting reasoning for prompt: Analyze this git repository and refine with local ollama api...
+{"status":"success","prompt":"Analyze this git repository and refine with local ollama api to file /home/loop/ai-runtime/main.sh","cycle_phase":4,"workers":[{"agent_id":7,"agent_name":"Coordinator","response":"","position":5.4978,"confidence":0.75,"tokens_used":0},{"agent_id":6,"agent_name":"Innovator","response":"","position":4.7124,"confidence":0.79,"tokens_used":0},{"agent_id":5,"agent_name":"Integrator","response":"","position":3.9270,"confidence":0.90,"tokens_used":0},{"agent_id":4,"agent_name":"Optimizer","response":"","position":3.1416,"confidence":1.00,"tokens_used":0},{"agent_id":3,"agent_name":"Validator","response":"","position":2.3562,"confidence":1.05,"tokens_used":0},{"agent_id":2,"agent_name":"Synthesizer","response":"","position":1.5708,"confidence":1.00,"tokens_used":0},{"agent_id":1,"agent_name":"Reasoner","response":"","position":0.7854,"confidence":0.90,"tokens_used":0},{"agent_id":0,"agent_name":"Analyzer","response":"","position":0.0000,"confidence":0.79,"tokens_used":0}],"coordinator":{"agent_id":7,"agent_name":"Coordinator","response":"","position":5.4978,"confidence":0.75,"tokens_used":0}}
+
